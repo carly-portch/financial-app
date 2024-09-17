@@ -1,18 +1,23 @@
 import streamlit as st
+import pandas as pd
+from datetime import datetime
+
+# File to store logs
+LOG_FILE = 'interaction_logs.csv'
+
+def log_interaction(data):
+    """ Log user interactions to a CSV file """
+    try:
+        df = pd.read_csv(LOG_FILE)
+    except FileNotFoundError:
+        df = pd.DataFrame(columns=['timestamp', 'current_age', 'retirement_age', 'monthly_income', 'monthly_expenses', 'net_worth'])
+
+    df = df.append(data, ignore_index=True)
+    df.to_csv(LOG_FILE, index=False)
 
 def calculate_retirement_net_worth(current_age, retirement_age, monthly_income, monthly_expenses, rate_of_return=0.05):
     """
     Calculate retirement net worth based on inputs.
-
-    Parameters:
-    - current_age (int): Current age of the user
-    - retirement_age (int): Age at which the user plans to retire
-    - monthly_income (float): Monthly income after tax
-    - monthly_expenses (float): Monthly expenses
-    - rate_of_return (float): Annual rate of return compounded monthly
-
-    Returns:
-    - net_worth (float): Estimated net worth at retirement
     """
     months = (retirement_age - current_age) * 12
     monthly_rate = rate_of_return / 12
@@ -33,10 +38,20 @@ def main():
     monthly_income = st.number_input("Monthly Income Post-Tax ($)", min_value=0.0, value=5000.0)
     monthly_expenses = st.number_input("Monthly Expenses ($)", min_value=0.0, value=3000.0)
 
-    # Calculate retirement net worth
     if st.button("Calculate Net Worth"):
         net_worth = calculate_retirement_net_worth(current_age, retirement_age, monthly_income, monthly_expenses)
         st.write(f"Estimated Retirement Net Worth: ${net_worth:,.2f}")
+
+        # Log interaction
+        interaction_data = {
+            'timestamp': datetime.now().isoformat(),
+            'current_age': current_age,
+            'retirement_age': retirement_age,
+            'monthly_income': monthly_income,
+            'monthly_expenses': monthly_expenses,
+            'net_worth': net_worth
+        }
+        log_interaction(interaction_data)
 
 if __name__ == "__main__":
     main()
