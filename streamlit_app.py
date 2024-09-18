@@ -1,6 +1,5 @@
 import streamlit as st
 from datetime import datetime
-import pandas as pd
 
 # Title and Instructions
 st.title("Design your dream life")
@@ -24,16 +23,18 @@ years_to_retirement = retirement_age - current_age_years
 # Monthly contribution (difference between income and expenses)
 monthly_contribution = monthly_income - monthly_expenses
 
-# Compound Interest Calculation (compounded monthly)
-months_to_retirement = int(years_to_retirement * 12)
+# Button to trigger calculation
+if st.button("Calculate"):
+    # Compound Interest Calculation (compounded monthly)
+    months_to_retirement = int(years_to_retirement * 12)
 
-if monthly_contribution > 0 and months_to_retirement > 0:
-    retirement_amount = 0
-    for month in range(months_to_retirement):
-        retirement_amount = retirement_amount * (1 + rate_of_return / 12) + monthly_contribution
-else:
-    retirement_amount = 0
+    if monthly_contribution > 0 and months_to_retirement > 0:
+        retirement_amount = 0
+        for month in range(months_to_retirement):
+            retirement_amount = retirement_amount * (1 + rate_of_return / 12) + monthly_contribution
+    else:
+        retirement_amount = 0
 
-# Display Results
-st.write(f"With your inputs, your estimated retirement savings at age {retirement_age} is:")
-st.write(f"${retirement_amount:,.2f}")
+    # Display Results
+    st.write(f"With your inputs, your estimated retirement savings at age {retirement_age} is:")
+    st.write(f"${retirement_amount:,.2f}")
