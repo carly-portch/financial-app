@@ -2,7 +2,7 @@ import streamlit as st
 from datetime import datetime
 import math
 
-# Function to calculate retirement net worth
+# Function to calculate compound interest for retirement net worth
 def calculate_net_worth(birthday, retirement_age, monthly_income, monthly_expenses, rate_of_return):
     # Calculate current age
     today = datetime.today()
@@ -22,11 +22,24 @@ def calculate_net_worth(birthday, retirement_age, monthly_income, monthly_expens
         return
 
     # Number of months to retirement
-    months_to_retirement = years_to_retirement * 12
+    months_to_retirement = int(years_to_retirement * 12)
 
-    # Calculate future net worth using compound interest formula
-    future_net_worth = monthly_surplus * ((math.pow(1 + rate_of_return / 100 / 12, months_to_retirement) - 1) / (rate_of_return / 100 / 12))
-    
+    # Compound interest formula: Future Value = P * [(1 + r/n)^(nt) - 1] / (r/n)
+    # P = monthly contribution (monthly_surplus)
+    # r = annual rate of return (input as a percentage)
+    # n = number of times interest is compounded per year (12 for monthly)
+    # t = number of years to retirement
+
+    r = rate_of_return / 100  # Convert percentage to decimal
+    n = 12  # Compounded monthly
+    t = years_to_retirement  # Time in years
+    if t <= 0:
+        st.error("Retirement age must be greater than current age.")
+        return
+
+    # Future Value calculation with monthly compounding and contributions
+    future_net_worth = monthly_surplus * ((math.pow(1 + r / n, n * t) - 1) / (r / n))
+
     return future_net_worth
 
 # Streamlit app
