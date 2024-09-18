@@ -32,8 +32,7 @@ if st.button("Calculate"):
     t = years_to_retirement
     C = monthly_contribution  # monthly contribution
 
-    # Compound Interest Calculation (using formula A = P(1 + r/n)^(nt) + C[((1 + r/n)^(nt) - 1) / (r/n)])
-    # Initial principal (P) is 0
+    # Compound Interest Calculation
     A = (C * (((1 + rate_of_return / n) ** (n * t) - 1) / (rate_of_return / n)))
 
     # Display Results
