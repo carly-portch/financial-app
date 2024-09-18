@@ -1,5 +1,5 @@
 import streamlit as st
-from datetime import datetime
+from datetime import datetime, date
 
 # Title and Instructions
 st.title("Design your dream life")
@@ -9,14 +9,16 @@ Welcome! Use this tool to calculate your retirement savings. Input your details 
 """)
 
 # Inputs
-current_birthday = st.date_input("Enter your birthday (YYYY-MM-DD)", value=datetime(1990, 1, 1))
+current_birthday = st.date_input("Enter your birthday (YYYY-MM-DD)", value=date(1990, 1, 1))
 retirement_age = st.number_input("Enter your estimated retirement age", min_value=18, max_value=100, value=65)
 monthly_income = st.number_input("Enter your monthly income post-tax", min_value=0, value=5000)
 monthly_expenses = st.number_input("Enter your monthly expenses", min_value=0, value=2000)
 rate_of_return = st.number_input("Enter your expected rate of return (%)", min_value=0.0, value=5.0) / 100.0
 
+# Convert today to a date object
+today = date.today()
+
 # Calculate current age and years to retirement
-today = datetime.now()
 current_age_years = (today - current_birthday).days / 365.25
 years_to_retirement = retirement_age - current_age_years
 
