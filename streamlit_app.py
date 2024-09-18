@@ -27,16 +27,15 @@ monthly_contribution = monthly_income - monthly_expenses
 
 # Button to trigger calculation
 if st.button("Calculate"):
-    # Compound Interest Calculation (compounded monthly)
-    months_to_retirement = int(years_to_retirement * 12)
+    # Variables for compound interest formula
     n = 12  # compounded monthly
     t = years_to_retirement
+    C = monthly_contribution  # monthly contribution
 
-    # Use classic compound interest formula A = P(1 + r/n)^(nt) and account for monthly contributions
-    retirement_amount = 0  # Starting amount
-    for month in range(months_to_retirement):
-        retirement_amount = retirement_amount * (1 + rate_of_return / n) + monthly_contribution
+    # Compound Interest Calculation (using formula A = P(1 + r/n)^(nt) + C[((1 + r/n)^(nt) - 1) / (r/n)])
+    # Initial principal (P) is 0
+    A = (C * (((1 + rate_of_return / n) ** (n * t) - 1) / (rate_of_return / n)))
 
     # Display Results
     st.write(f"With your inputs, your estimated retirement savings at age {retirement_age} is:")
-    st.write(f"${retirement_amount:,.2f}")
+    st.write(f"${A:,.2f}")
