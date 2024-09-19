@@ -32,9 +32,13 @@ with st.expander("Add a Goal"):
         if contribution_amount > 0 and goal_amount > 0:
             rate_of_return_monthly = interest_rate / 100 / 12
             if rate_of_return_monthly > 0:
-                # Calculate months required to reach goal
-                months_to_goal = np.log(contribution_amount / (contribution_amount - goal_amount * rate_of_return_monthly)) / np.log(1 + rate_of_return_monthly)
-                target_year = date.today().year + int(np.ceil(months_to_goal / 12))
+                try:
+                    # Calculate months required to reach goal
+                    months_to_goal = np.log(contribution_amount / (contribution_amount - goal_amount * rate_of_return_monthly)) / np.log(1 + rate_of_return_monthly)
+                    target_year = date.today().year + int(np.ceil(months_to_goal / 12))
+                except ValueError as e:
+                    st.error(f"Error in calculation: {e}")
+                    target_year = None
             else:
                 target_year = date.today().year + int(np.ceil(goal_amount / contribution_amount / 12))
         else:
@@ -48,9 +52,13 @@ with st.expander("Add a Goal"):
         if goal_name and goal_amount > 0:
             if goal_type == "Monthly Contribution":
                 # Calculate the number of months required based on the contribution amount
-                rate_of_return_monthly = interest_rate / 100 / 12
-                months_to_goal = np.log(contribution_amount / (contribution_amount - goal_amount * rate_of_return_monthly)) / np.log(1 + rate_of_return_monthly)
-                target_year = date.today().year + int(np.ceil(months_to_goal / 12))
+                if target_year is not None:
+                    rate_of_return_monthly = interest_rate / 100 / 12
+                    months_to_goal = np.log(contribution_amount / (contribution_amount - goal_amount * rate_of_return_monthly)) / np.log(1 + rate_of_return_monthly)
+                    target_year = date.today().year + int(np.ceil(months_to_goal / 12))
+                else:
+                    st.error("Error calculating target year for monthly contribution.")
+                    target_year = None
 
             elif goal_type == "Target Date":
                 # Calculate the monthly contribution required based on the target date
@@ -61,16 +69,19 @@ with st.expander("Add a Goal"):
                 else:
                     monthly_contribution = goal_amount / months_to_goal
 
-            # Append goal to session state
-            st.session_state.goals.append({
-                'goal_name': goal_name,
-                'goal_amount': goal_amount,
-                'monthly_contribution': contribution_amount if contribution_amount else monthly_contribution,
-                'target_date': target_year
-            })
+            # Append goal to session state if target_year is valid
+            if target_year is not None:
+                st.session_state.goals.append({
+                    'goal_name': goal_name,
+                    'goal_amount': goal_amount,
+                    'monthly_contribution': contribution_amount if contribution_amount else monthly_contribution,
+                    'target_date': target_year
+                })
 
-            st.success(f"Goal '{goal_name}' added successfully.")
-            st.session_state.plot_updated = False  # Flag to update the plot
+                st.success(f"Goal '{goal_name}' added successfully.")
+                st.session_state.plot_updated = False  # Flag to update the plot
+            else:
+                st.error("Please enter valid details to add the goal.")
         else:
             st.error("Please enter a valid goal name and amount.")
 
@@ -168,12 +179,12 @@ def plot_timeline():
     
     # Format hover text as lists and set font size
     fig.update_traces(
-        hovertemplate='<b>%{text}</b><br><br>' + timeline_df['Text'] +
-        '<extra></extra>',
+        hovertemplate='%{hovertext}',
         textfont_size=14
     )
 
     st.plotly_chart(fig, use_container_width=True)
+    st.session_state.plot_updated = True
 
 # Display existing goals in the sidebar
 st.sidebar.header("Existing Goals")
