@@ -37,7 +37,7 @@ with st.expander("Add a Goal"):
     if st.button("Add goal to timeline"):
         if goal_name and goal_amount > 0:
             if goal_type == "Monthly Contribution":
-                months_to_goal = 12 * (date.today().year - current_age)  # You might want to adjust the years calculation
+                months_to_goal = 12 * (date.today().year - current_age)  # Adjust as needed
                 rate_of_return_monthly = interest_rate / 100 / 12
                 if rate_of_return_monthly > 0:
                     monthly_contribution = goal_amount * rate_of_return_monthly / ((1 + rate_of_return_monthly) ** months_to_goal - 1)
@@ -67,20 +67,34 @@ with st.expander("Add a Goal"):
         else:
             st.error("Please enter a valid goal name and amount.")
 
-# Function to calculate retirement net worth
-def calculate_retirement_net_worth():
-    monthly_contributions = monthly_income - monthly_expenses
+# Function to calculate retirement net worth without goals
+def calculate_retirement_net_worth_without_goals():
+    monthly_savings = monthly_income - monthly_expenses
+    years_to_retirement = retirement_age - current_age
+    months_to_retirement = years_to_retirement * 12
+    rate_of_return_monthly = rate_of_return / 100 / 12
+
+    if rate_of_return_monthly > 0:
+        retirement_net_worth = monthly_savings * ((1 + rate_of_return_monthly) ** months_to_retirement - 1) / rate_of_return_monthly
+    else:
+        retirement_net_worth = monthly_savings * months_to_retirement
+
+    return retirement_net_worth
+
+# Function to calculate retirement net worth with goals
+def calculate_retirement_net_worth_with_goals():
+    remaining_contributions = monthly_income - monthly_expenses
     for goal in st.session_state.goals:
-        monthly_contributions -= goal['monthly_contribution']
+        remaining_contributions -= goal['monthly_contribution']
 
     years_to_retirement = retirement_age - current_age
     months_to_retirement = years_to_retirement * 12
     rate_of_return_monthly = rate_of_return / 100 / 12
 
     if rate_of_return_monthly > 0:
-        retirement_net_worth = monthly_contributions * ((1 + rate_of_return_monthly) ** months_to_retirement - 1) / rate_of_return_monthly
+        retirement_net_worth = remaining_contributions * ((1 + rate_of_return_monthly) ** months_to_retirement - 1) / rate_of_return_monthly
     else:
-        retirement_net_worth = monthly_contributions * months_to_retirement
+        retirement_net_worth = remaining_contributions * months_to_retirement
 
     return retirement_net_worth
 
@@ -96,7 +110,7 @@ def plot_timeline():
         'Event': ['Current Age', 'Retirement Age'] + [goal['goal_name'] for goal in st.session_state.goals],
         'Text': [
             f"<b>Current Age:</b> {current_age}<br><b>Monthly Income:</b> ${monthly_income:,.2f}<br><b>Monthly Expenses:</b> ${monthly_expenses:,.2f}<br><b>Amount Going Towards Retirement:</b> ${monthly_income - monthly_expenses - sum(goal['monthly_contribution'] for goal in st.session_state.goals):,.2f}",
-            f"<b>Retirement Age:</b> {retirement_age}<br><b>Net Worth at Retirement:</b> ${calculate_retirement_net_worth():,.2f}"
+            f"<b>Retirement Age:</b> {retirement_age}<br><b>Net Worth at Retirement:</b> ${calculate_retirement_net_worth_with_goals():,.2f}"
         ] + [
             f"<b>Goal:</b> {goal['goal_name']}<br><b>Amount:</b> ${goal['goal_amount']:.2f}<br><b>Monthly Contribution:</b> ${goal['monthly_contribution']:.2f}"
             for goal in st.session_state.goals
@@ -150,9 +164,12 @@ def plot_timeline():
     
     st.plotly_chart(fig)
 
-# Calculate and display retirement net worth when button is pressed
+# Calculate and display retirement net worth
 if st.button("Calculate Retirement"):
-    st.write(f"Your estimated retirement net worth at age {retirement_age} is: ${calculate_retirement_net_worth():,.2f}")
+    if st.session_state.goals:
+        st.write(f"Your estimated retirement net worth at age {retirement_age} is: ${calculate_retirement_net_worth_with_goals():,.2f}")
+    else:
+        st.write(f"Your estimated retirement net worth at age {retirement_age} without goals is: ${calculate_retirement_net_worth_without_goals():,.2f}")
 
 # Plot the timeline
 plot_timeline()
