@@ -93,4 +93,31 @@ def create_timeline_data():
     data = []
     current_year = date.today().year
     for year in range(current_year, retirement_age + 1):
-        data.append({'Year': year, 'Current Age': year - current_
+        data.append({'Year': year, 'Current Age': year - current_year + current_age})
+    
+    for goal in st.session_state.goals:
+        if goal['goal_type'] == "Desired date":
+            if goal['goal_year'] >= current_year:
+                data.append({'Year': goal['goal_year'], 'Goal': f"{goal['goal_name']} (${goal['goal_amount']})"})
+        elif goal['goal_type'] == "Monthly amount":
+            if goal['goal_monthly_contributions_input'] > 0:
+                months_to_goal = math.log(goal['goal_monthly_contributions_input'] / (goal['goal_monthly_contributions_input'] - goal['goal_amount'] * goal['goal_rate_of_return'] / 100 / 12)) / math.log(1 + goal['goal_rate_of_return'] / 100 / 12)
+                goal_year = int(date.today().year + months_to_goal // 12)
+                if goal_year >= current_year:
+                    data.append({'Year': goal_year, 'Goal': f"{goal['goal_name']} (${goal['goal_amount']})"})
+    
+    return pd.DataFrame(data)
+
+def plot_timeline():
+    timeline_df = create_timeline_data()
+    st.write("### Timeline")
+    
+    timeline_chart = pd.DataFrame({
+        'Year': timeline_df['Year'],
+        'Current Age': timeline_df['Current Age'] if 'Current Age' in timeline_df else pd.NA,
+        'Goal': timeline_df['Goal'] if 'Goal' in timeline_df else pd.NA
+    }).dropna()
+
+    st.line_chart(timeline_chart.set_index('Year'))
+
+plot_timeline()
