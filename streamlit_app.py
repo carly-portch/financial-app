@@ -1,8 +1,7 @@
 import streamlit as st
-import plotly.express as px
+import plotly.graph_objects as go
 import pandas as pd
 from datetime import date
-import math
 
 st.title("Design Your Dream Life")
 st.write("This tool helps you estimate your retirement net worth and manage goals.")
@@ -38,27 +37,40 @@ def plot_timeline():
     current_year = today.year
     retirement_year = current_year + (retirement_age - current_age)
     
+    # Create timeline data
     timeline_df = pd.DataFrame({
         'Year': [current_year, retirement_year],
         'Event': ['Current Age', 'Retirement Age'],
-        'Text': [f"Current Age: {current_age}\nMonthly Income: ${monthly_income:,.2f}\nMonthly Expenses: ${monthly_expenses:,.2f}\nAmount Going Towards Retirement: ${monthly_contributions:,.2f}",
-                 f"Retirement Age: {retirement_age}\nNet Worth at Retirement: ${retirement_net_worth:,.2f}"]
+        'Text': [
+            f"Current Age: {current_age}\nMonthly Income: ${monthly_income:,.2f}\nMonthly Expenses: ${monthly_expenses:,.2f}\nAmount Going Towards Retirement: ${monthly_contributions:,.2f}",
+            f"Retirement Age: {retirement_age}\nNet Worth at Retirement: ${retirement_net_worth:,.2f}"
+        ]
     })
     
-    fig = px.scatter(timeline_df, x='Year', y=[0]*len(timeline_df), text='Text', title="Life Timeline", labels={'Year': 'Year'})
+    # Create the figure
+    fig = go.Figure()
     
-    fig.update_traces(marker=dict(size=12, color='red', line=dict(width=2, color='black')), selector=dict(mode='markers+text'))
-    fig.update_layout(showlegend=False, xaxis_title='Year', yaxis=dict(visible=False), xaxis=dict(tickmode='array', tickvals=[current_year, retirement_year], ticktext=[f"{current_year}", f"{retirement_year}"]))
+    # Add red dots for current and retirement ages
+    fig.add_trace(go.Scatter(x=[current_year, retirement_year], y=[0, 0], mode='markers', marker=dict(size=12, color='red', line=dict(width=2, color='black')), text=['Current Age', 'Retirement Age'], textposition='top center', hoverinfo='text', hovertext=timeline_df['Text']))
     
+    # Add line connecting the red dots
+    fig.add_trace(go.Scatter(x=[current_year, retirement_year], y=[0, 0], mode='lines', line=dict(color='red', width=2)))
+    
+    # Update layout
     fig.update_layout(
+        title="Life Timeline",
         xaxis_title='Year',
-        yaxis_visible=False,
-        xaxis=dict(tickmode='array', tickvals=[current_year, retirement_year], ticktext=[f"{current_year}", f"{retirement_year}"])
+        yaxis=dict(visible=False),
+        xaxis=dict(
+            tickmode='array',
+            tickvals=[current_year, retirement_year],
+            ticktext=[f"{current_year}", f"{retirement_year}"]
+        ),
+        showlegend=False
     )
     
-    # Add hover text with detailed information
+    # Format hover text as lists
     fig.update_traces(
-        texttemplate='%{text}',
         hovertemplate='<br>'.join([
             '%{text}'
         ])
