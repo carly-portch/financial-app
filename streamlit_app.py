@@ -35,32 +35,37 @@ with st.expander("Add a Goal"):
 
     # Add goal button
     if st.button("Add goal to timeline"):
-        if goal_type == "Monthly Contribution":
-            # Calculate target date based on monthly contribution
-            goal_year = date.today().year
-        else:
-            goal_year = target_date
-
-        # Calculate monthly contribution needed
-        if contribution_amount is not None:
-            months_to_goal = 12 * (goal_year - date.today().year)
-            rate_of_return_monthly = interest_rate / 100 / 12
-            if rate_of_return_monthly > 0:
-                monthly_contribution = goal_amount * rate_of_return_monthly / ((1 + rate_of_return_monthly) ** months_to_goal - 1)
+        if goal_name and goal_amount > 0:
+            if goal_type == "Monthly Contribution":
+                months_to_goal = 12 * (date.today().year - current_age)  # You might want to adjust the years calculation
+                rate_of_return_monthly = interest_rate / 100 / 12
+                if rate_of_return_monthly > 0:
+                    monthly_contribution = goal_amount * rate_of_return_monthly / ((1 + rate_of_return_monthly) ** months_to_goal - 1)
+                else:
+                    monthly_contribution = goal_amount / months_to_goal
+                target_year = date.today().year
+            elif goal_type == "Target Date":
+                target_year = target_date
+                months_to_goal = 12 * (target_year - date.today().year)
+                rate_of_return_monthly = interest_rate / 100 / 12
+                if rate_of_return_monthly > 0:
+                    monthly_contribution = goal_amount * rate_of_return_monthly / ((1 + rate_of_return_monthly) ** months_to_goal - 1)
+                else:
+                    monthly_contribution = goal_amount / months_to_goal
             else:
-                monthly_contribution = goal_amount / months_to_goal
+                monthly_contribution = 0
+
+            # Append goal to session state
+            st.session_state.goals.append({
+                'goal_name': goal_name,
+                'goal_amount': goal_amount,
+                'monthly_contribution': monthly_contribution,
+                'target_date': target_year
+            })
+
+            st.success(f"Goal '{goal_name}' added successfully.")
         else:
-            monthly_contribution = contribution_amount
-
-        # Append goal to session state
-        st.session_state.goals.append({
-            'goal_name': goal_name,
-            'goal_amount': goal_amount,
-            'monthly_contribution': monthly_contribution,
-            'target_date': goal_year
-        })
-
-        st.success(f"Goal '{goal_name}' added successfully.")
+            st.error("Please enter a valid goal name and amount.")
 
 # Function to calculate retirement net worth
 def calculate_retirement_net_worth():
@@ -86,7 +91,7 @@ def plot_timeline():
     retirement_year = current_year + (retirement_age - current_age)
     
     # Create timeline data
-    timeline_df = pd.DataFrame({
+    timeline_data = {
         'Year': [current_year, retirement_year] + [goal['target_date'] for goal in st.session_state.goals],
         'Event': ['Current Age', 'Retirement Age'] + [goal['goal_name'] for goal in st.session_state.goals],
         'Text': [
@@ -96,8 +101,10 @@ def plot_timeline():
             f"<b>Goal:</b> {goal['goal_name']}<br><b>Amount:</b> ${goal['goal_amount']:.2f}<br><b>Monthly Contribution:</b> ${goal['monthly_contribution']:.2f}"
             for goal in st.session_state.goals
         ]
-    })
-    
+    }
+
+    timeline_df = pd.DataFrame(timeline_data)
+
     # Create the figure
     fig = go.Figure()
     
