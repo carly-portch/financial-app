@@ -59,7 +59,7 @@ def calculate_goal(goal):
                 monthly_contributions = goal_amount * rate_of_return / ((1 + rate_of_return) ** months_to_goal - 1)
             else:
                 monthly_contributions = goal_amount / months_to_goal
-            return monthly_contributions
+            return f"${monthly_contributions:,.2f}"
         else:
             return "Error: The target year must be in the future."
     elif goal['goal_type'] == "Monthly contribution":
@@ -85,12 +85,18 @@ for i, goal in enumerate(st.session_state.goals):
         goal['goal_year'] = st.number_input(f"Desired year to reach this goal (yyyy)", value=goal['goal_year'], min_value=date.today().year, key=f"goal_year_{i}")
         if st.button(f"Calculate Goal {i + 1}", key=f"calculate_goal_{i}"):
             result = calculate_goal(goal)
-            st.write(f"To reach {goal['goal_name']} by {goal['goal_year']}, you need to contribute ${result:,.2f} per month.")
+            if "Error" in result:
+                st.error(result)
+            else:
+                st.write(f"To reach {goal['goal_name']} by {goal['goal_year']}, you need to contribute {result} per month.")
     elif goal['goal_type'] == "Monthly contribution":
         goal['goal_monthly_contributions_input'] = st.number_input(f"How much would you like to contribute each month?", value=goal['goal_monthly_contributions_input'], min_value=0.0, key=f"goal_monthly_contributions_input_{i}")
         if st.button(f"Calculate Goal {i + 1}", key=f"calculate_goal_{i}"):
             result = calculate_goal(goal)
-            st.write(f"At ${goal['goal_monthly_contributions_input']:,.2f} per month, you'll reach {goal['goal_name']} by {result}.")
+            if "Error" in result:
+                st.error(result)
+            else:
+                st.write(f"At {goal['goal_monthly_contributions_input']:,.2f} per month, you'll reach {goal['goal_name']} by {result}.")
 
 # Plot timeline
 def plot_timeline():
