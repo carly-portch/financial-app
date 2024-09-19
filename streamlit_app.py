@@ -69,7 +69,7 @@ for i, goal in enumerate(st.session_state.goals):
     st.write(f"**{goal['goal_name']}** - ${goal['goal_amount']:.2f} at ${goal['monthly_contribution']:.2f} per month")
     
 # Calculate Retirement Net Worth
-if st.button("Calculate Retirement"):
+def calculate_retirement_net_worth():
     monthly_contributions = monthly_income - monthly_expenses
     for goal in st.session_state.goals:
         monthly_contributions -= goal['monthly_contribution']
@@ -82,7 +82,11 @@ if st.button("Calculate Retirement"):
         retirement_net_worth = monthly_contributions * ((1 + rate_of_return_monthly) ** months_to_retirement - 1) / rate_of_return_monthly
     else:
         retirement_net_worth = monthly_contributions * months_to_retirement
+    
+    return retirement_net_worth
 
+if st.button("Calculate Retirement"):
+    retirement_net_worth = calculate_retirement_net_worth()
     st.write(f"Your estimated retirement net worth at age {retirement_age} is: ${retirement_net_worth:,.2f}")
 
 # Plot timeline
@@ -99,7 +103,7 @@ def plot_timeline():
         'Event': ['Current Age', 'Retirement Age'] + ['Goal'] * len(goal_years),
         'Text': [
             f"<b>Current Age:</b> {current_age}<br><b>Monthly Income:</b> ${monthly_income:,.2f}<br><b>Monthly Expenses:</b> ${monthly_expenses:,.2f}<br><b>Amount Going Towards Retirement:</b> ${monthly_income - monthly_expenses:,.2f}",
-            f"<b>Retirement Age:</b> {retirement_age}<br><b>Net Worth at Retirement:</b> ${retirement_net_worth:,.2f}"
+            f"<b>Retirement Age:</b> {retirement_age}<br><b>Net Worth at Retirement:</b> ${calculate_retirement_net_worth():,.2f}"
         ] + [
             f"<b>Goal Name:</b> {goal['goal_name']}<br><b>Amount Needed:</b> ${goal['goal_amount']:.2f}<br><b>Monthly Contribution:</b> ${goal['monthly_contribution']:.2f}"
             for goal in st.session_state.goals
