@@ -81,6 +81,10 @@ def plot_timeline():
     current_year = today.year
     retirement_year = current_year + (retirement_age - current_age)
     
+    # Calculate remaining savings to include in the timeline
+    total_goal_contributions = sum(goal['monthly_contribution_needed'] for goal in st.session_state.goals)
+    remaining_contributions = max(0, monthly_income - monthly_expenses - total_goal_contributions)
+    
     # Create timeline data
     timeline_df = pd.DataFrame({
         'Year': [current_year, retirement_year] + [goal['target_year'] for goal in st.session_state.goals],
