@@ -29,23 +29,25 @@ with st.expander("Add a Goal"):
     if goal_type == "Monthly Contribution":
         contribution_amount = st.number_input("Monthly contribution towards this goal", min_value=0.0)
         target_date = None
+        if contribution_amount > 0 and goal_amount > 0:
+            rate_of_return_monthly = interest_rate / 100 / 12
+            if rate_of_return_monthly > 0:
+                # Calculate months required to reach goal
+                months_to_goal = (pd.np.log(contribution_amount / (contribution_amount - goal_amount * rate_of_return_monthly)) /
+                                  pd.np.log(1 + rate_of_return_monthly))
+                target_year = date.today().year + (months_to_goal // 12)
+            else:
+                target_year = date.today().year + (goal_amount / contribution_amount // 12)
     elif goal_type == "Target Date":
-        target_date = st.number_input("Target year to reach this goal (yyyy)", min_value=date.today().year)
+        target_year = st.number_input("Target year to reach this goal (yyyy)", min_value=date.today().year)
         contribution_amount = None
 
     # Add goal button
     if st.button("Add goal to timeline"):
         if goal_name and goal_amount > 0:
             if goal_type == "Monthly Contribution":
-                months_to_goal = 12 * (date.today().year - current_age)  # Adjust as needed
-                rate_of_return_monthly = interest_rate / 100 / 12
-                if rate_of_return_monthly > 0:
-                    monthly_contribution = goal_amount * rate_of_return_monthly / ((1 + rate_of_return_monthly) ** months_to_goal - 1)
-                else:
-                    monthly_contribution = goal_amount / months_to_goal
-                target_year = date.today().year
+                target_year = int(target_year)
             elif goal_type == "Target Date":
-                target_year = target_date
                 months_to_goal = 12 * (target_year - date.today().year)
                 rate_of_return_monthly = interest_rate / 100 / 12
                 if rate_of_return_monthly > 0:
@@ -59,7 +61,7 @@ with st.expander("Add a Goal"):
             st.session_state.goals.append({
                 'goal_name': goal_name,
                 'goal_amount': goal_amount,
-                'monthly_contribution': monthly_contribution,
+                'monthly_contribution': contribution_amount if contribution_amount else monthly_contribution,
                 'target_date': target_year
             })
 
@@ -170,9 +172,10 @@ goal_to_remove = st.sidebar.selectbox("Select a goal to remove", options=[""] + 
 if st.sidebar.button("Remove Selected Goal"):
     if goal_to_remove:
         st.session_state.goals = [goal for goal in st.session_state.goals if goal['goal_name'] != goal_to_remove]
-        st.success(f"Goal '{goal_to_remove}' removed successfully.")
+        st.success(f"Goal '{goal_to_remove}' removed.")
+        plot_timeline()
     else:
-        st.error("Please select a goal to remove.")
+        st.sidebar.error("Please select a goal to remove.")
 
 # Calculate retirement based on remaining savings after goals
 if st.button("Calculate Retirement"):
