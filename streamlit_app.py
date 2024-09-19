@@ -37,10 +37,10 @@ def plot_timeline():
     timeline_df = pd.DataFrame({
         'Year': years_as_dates,
         'Age': years,
-        'Text': ['', '']  # Empty for now
+        'Text': [''] * len(years)  # Initialize with empty text
     })
 
-    # Update the text
+    # Update the text for the dots
     timeline_df.loc[timeline_df['Age'] == current_age, 'Text'] = [f'Current Age: {current_age}\nMonthly Income: ${monthly_income:,.2f}\nExpenses: ${monthly_expenses:,.2f}\nSavings to Retirement: ${monthly_contributions:,.2f}']
     timeline_df.loc[timeline_df['Age'] == retirement_age, 'Text'] = [f'Retirement Age: {retirement_age}\nEstimated Net Worth: ${retirement_net_worth:,.2f}']
 
@@ -50,15 +50,24 @@ def plot_timeline():
     fig.add_trace(go.Scatter(x=[years_as_dates[0], years_as_dates[-1]], y=[0, 0], mode='lines', line=dict(color='gray', width=2), showlegend=False))
 
     # Add red dots at current age and retirement age
-    fig.add_trace(go.Scatter(x=timeline_df['Year'], y=[0] * len(timeline_df), mode='markers+text', text=timeline_df['Text'], textposition='top center',
-                             marker=dict(color='red', size=10), showlegend=False))
+    fig.add_trace(go.Scatter(
+        x=timeline_df['Year'],
+        y=[0] * len(timeline_df),
+        mode='markers+text',
+        text=timeline_df['Text'],
+        textposition='top center',
+        marker=dict(color='red', size=10),
+        showlegend=False
+    ))
 
     fig.update_layout(
         title="Life Timeline",
         xaxis_title="Year",
-        yaxis_title="",
-        yaxis=dict(showticklabels=False),
-        xaxis=dict(tickvals=[year for year in years_as_dates], ticktext=[str(year) for year in years_as_dates]),
+        yaxis=dict(showticklabels=False),  # Hide y-axis labels
+        xaxis=dict(
+            tickvals=[year for year in years_as_dates], 
+            ticktext=[str(year) for year in years_as_dates]
+        ),
         textfont=dict(size=20)
     )
 
