@@ -1,7 +1,6 @@
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
-import math
 from datetime import date
 
 st.title("Design Your Dream Life")
@@ -16,25 +15,7 @@ monthly_expenses = st.number_input("Enter your monthly expenses", min_value=0.0)
 rate_of_return = st.number_input("Rate of return (%)", min_value=0.0, max_value=100.0, value=5.0)
 st.write("Note: For stock market investments, 6-7% is the average rate of return; for savings, input the interest rate of your savings account.")
 
-# Compound interest calculation
-monthly_contributions = monthly_income - monthly_expenses
-years_to_retirement = retirement_age - current_age
-months_to_retirement = years_to_retirement * 12
-rate_of_return_monthly = rate_of_return / 100 / 12
-
-# Compound interest formula
-if rate_of_return_monthly > 0:
-    retirement_net_worth = monthly_contributions * ((1 + rate_of_return_monthly) ** months_to_retirement - 1) / rate_of_return_monthly
-else:
-    retirement_net_worth = monthly_contributions * months_to_retirement
-
-# Display retirement net worth
-if st.button("Calculate Retirement Net Worth"):
-    st.write(f"Your estimated retirement net worth at age {retirement_age} is: ${retirement_net_worth:,.2f}")
-
-# Add a goal section
-st.write("### Add a Goal")
-
+# Initialize goals list in session state
 if 'goals' not in st.session_state:
     st.session_state.goals = []
 
@@ -43,62 +24,33 @@ def add_goal():
         'goal_name': '',
         'goal_amount': 0.0,
         'goal_rate_of_return': 5.0,
-        'goal_type': 'Target date',
+        'goal_type': 'Desired date',
         'goal_year': date.today().year,
         'goal_monthly_contributions_input': 0.0,
     })
 
-def calculate_goal(goal):
-    goal_amount = goal['goal_amount']
-    rate_of_return = goal['goal_rate_of_return'] / 100 / 12
-    if goal['goal_type'] == "Target date":
-        goal_year = goal['goal_year']
-        months_to_goal = (goal_year - date.today().year) * 12
-        if months_to_goal > 0:
-            if rate_of_return > 0:
-                monthly_contributions = goal_amount * rate_of_return / ((1 + rate_of_return) ** months_to_goal - 1)
-            else:
-                monthly_contributions = goal_amount / months_to_goal
-            return f"${monthly_contributions:,.2f}"
-        else:
-            return "Error: The target year must be in the future."
-    elif goal['goal_type'] == "Monthly contribution":
-        monthly_contributions = goal['goal_monthly_contributions_input']
-        if monthly_contributions > 0:
-            months_to_goal = math.log(monthly_contributions / (monthly_contributions - goal_amount * rate_of_return)) / math.log(1 + rate_of_return)
+def calculate_goal_contribution(goal):
+    if goal['goal_type'] == "Monthly amount":
+        if goal['goal_monthly_contributions_input'] > 0 and goal['goal_rate_of_return'] > 0:
+            months_to_goal = math.log(goal['goal_monthly_contributions_input'] / (goal['goal_monthly_contributions_input'] - goal['goal_amount'] * goal['goal_rate_of_return'] / 100 / 12)) / math.log(1 + goal['goal_rate_of_return'] / 100 / 12)
             goal_completion_year = int(date.today().year + months_to_goal // 12)
-            return f"Year {goal_completion_year}"
+            return goal_completion_year
         else:
-            return "Error: Monthly contribution must be greater than 0."
+            st.write("Error: Ensure the rate of return and monthly contribution are greater than 0.")
+            return None
+    elif goal['goal_type'] == "Desired date":
+        months_to_goal = (goal['goal_year'] - date.today().year) * 12
+        if months_to_goal > 0 and goal['goal_rate_of_return'] > 0:
+            goal_monthly_contributions = goal['goal_amount'] * goal['goal_rate_of_return'] / 100 / 12 / ((1 + goal['goal_rate_of_return'] / 100 / 12) ** months_to_goal - 1)
+            return goal_monthly_contributions
+        else:
+            st.write("Error: Ensure the rate of return is greater than 0 and the goal year is valid.")
+            return None
 
-if st.button("Add a Goal"):
-    add_goal()
+def update_retirement_contribution():
+    total_goal_contributions = sum(calculate_goal_contribution(goal) if goal['goal_type'] == "Desired date" else goal['goal_monthly_contributions_input'] for goal in st.session_state.goals)
+    return max(0, monthly_income - monthly_expenses - total_goal_contributions)
 
-for i, goal in enumerate(st.session_state.goals):
-    st.write(f"### Goal {i + 1}")
-    goal['goal_name'] = st.text_input(f"Goal name", value=goal['goal_name'], key=f"goal_name_{i}")
-    goal['goal_amount'] = st.number_input(f"Goal amount ($)", value=goal['goal_amount'], min_value=0.0, key=f"goal_amount_{i}")
-    goal['goal_rate_of_return'] = st.number_input(f"Rate of return for this goal (%)", value=goal['goal_rate_of_return'], min_value=0.0, max_value=100.0, key=f"goal_rate_of_return_{i}")
-    goal['goal_type'] = st.radio(f"Would you like to input a target date or monthly amount?", ["Target date", "Monthly contribution"], index=0 if goal['goal_type'] == "Target date" else 1, key=f"goal_type_{i}")
-
-    if goal['goal_type'] == "Target date":
-        goal['goal_year'] = st.number_input(f"Desired year to reach this goal (yyyy)", value=goal['goal_year'], min_value=date.today().year, key=f"goal_year_{i}")
-        if st.button(f"Calculate Goal {i + 1}", key=f"calculate_goal_{i}"):
-            result = calculate_goal(goal)
-            if "Error" in result:
-                st.error(result)
-            else:
-                st.write(f"To reach {goal['goal_name']} by {goal['goal_year']}, you need to contribute {result} per month.")
-    elif goal['goal_type'] == "Monthly contribution":
-        goal['goal_monthly_contributions_input'] = st.number_input(f"How much would you like to contribute each month?", value=goal['goal_monthly_contributions_input'], min_value=0.0, key=f"goal_monthly_contributions_input_{i}")
-        if st.button(f"Calculate Goal {i + 1}", key=f"calculate_goal_{i}"):
-            result = calculate_goal(goal)
-            if "Error" in result:
-                st.error(result)
-            else:
-                st.write(f"At {goal['goal_monthly_contributions_input']:,.2f} per month, you'll reach {goal['goal_name']} by {result}.")
-
-# Plot timeline
 def plot_timeline():
     today = date.today()
     current_year = today.year
@@ -109,7 +61,7 @@ def plot_timeline():
         'Year': [current_year, retirement_year],
         'Event': ['Current Age', 'Retirement Age'],
         'Text': [
-            f"<b>Current Age:</b> {current_age}<br><b>Monthly Income:</b> ${monthly_income:,.2f}<br><b>Monthly Expenses:</b> ${monthly_expenses:,.2f}<br><b>Amount Going Towards Retirement:</b> ${monthly_contributions:,.2f}",
+            f"<b>Current Age:</b> {current_age}<br><b>Monthly Income:</b> ${monthly_income:,.2f}<br><b>Monthly Expenses:</b> ${monthly_expenses:,.2f}<br><b>Amount Going Towards Retirement:</b> ${update_retirement_contribution():,.2f}",
             f"<b>Retirement Age:</b> {retirement_age}<br><b>Net Worth at Retirement:</b> ${retirement_net_worth:,.2f}"
         ]
     })
@@ -158,6 +110,39 @@ def plot_timeline():
     )
     
     st.plotly_chart(fig)
+
+# Add goal functionality
+if st.button("Add a goal"):
+    add_goal()
+
+# Display goals inputs
+for i, goal in enumerate(st.session_state.goals):
+    st.write(f"### Goal {i + 1}")
+    goal['goal_name'] = st.text_input(f"Goal name {i+1}", value=goal['goal_name'], key=f"goal_name_{i}")
+    goal['goal_amount'] = st.number_input(f"Goal amount ($) {i+1}", value=goal['goal_amount'], min_value=0.0, key=f"goal_amount_{i}")
+    goal['goal_rate_of_return'] = st.number_input(f"Rate of return for this goal (%) {i+1}", value=goal['goal_rate_of_return'], min_value=0.0, max_value=100.0, key=f"goal_rate_of_return_{i}")
+    goal['goal_type'] = st.radio(f"Would you like to input a desired date or monthly amount? {i+1}", ["Desired date", "Monthly amount"], index=0 if goal['goal_type'] == "Desired date" else 1, key=f"goal_type_{i}")
+
+    if goal['goal_type'] == "Desired date":
+        goal['goal_year'] = st.number_input(f"Desired year to reach this goal (yyyy) {i+1}", value=goal['goal_year'], min_value=date.today().year, key=f"goal_year_{i}")
+    elif goal['goal_type'] == "Monthly amount":
+        goal['goal_monthly_contributions_input'] = st.number_input(f"How much would you like to contribute each month? {i+1}", value=goal['goal_monthly_contributions_input'], min_value=0.0, key=f"goal_monthly_contributions_input_{i}")
+
+# Calculate the retirement net worth and update the timeline
+monthly_contributions = update_retirement_contribution()
+years_to_retirement = retirement_age - current_age
+months_to_retirement = years_to_retirement * 12
+rate_of_return_monthly = rate_of_return / 100 / 12
+
+# Compound interest formula
+if rate_of_return_monthly > 0:
+    retirement_net_worth = monthly_contributions * ((1 + rate_of_return_monthly) ** months_to_retirement - 1) / rate_of_return_monthly
+else:
+    retirement_net_worth = monthly_contributions * months_to_retirement
+
+# Display retirement net worth
+if st.button("Calculate Retirement Net Worth"):
+    st.write(f"Your estimated retirement net worth at age {retirement_age} is: ${retirement_net_worth:,.2f}")
 
 # Plot the timeline
 plot_timeline()
