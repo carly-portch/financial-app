@@ -1,6 +1,7 @@
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
+import numpy as np
 from datetime import date
 
 st.title("Design Your Dream Life")
@@ -33,11 +34,10 @@ with st.expander("Add a Goal"):
             rate_of_return_monthly = interest_rate / 100 / 12
             if rate_of_return_monthly > 0:
                 # Calculate months required to reach goal
-                months_to_goal = (pd.np.log(contribution_amount / (contribution_amount - goal_amount * rate_of_return_monthly)) /
-                                  pd.np.log(1 + rate_of_return_monthly))
-                target_year = date.today().year + (months_to_goal // 12)
+                months_to_goal = np.log(contribution_amount / (contribution_amount - goal_amount * rate_of_return_monthly)) / np.log(1 + rate_of_return_monthly)
+                target_year = date.today().year + int(months_to_goal // 12)
             else:
-                target_year = date.today().year + (goal_amount / contribution_amount // 12)
+                target_year = date.today().year + int(goal_amount / contribution_amount // 12)
     elif goal_type == "Target Date":
         target_year = st.number_input("Target year to reach this goal (yyyy)", min_value=date.today().year)
         contribution_amount = None
