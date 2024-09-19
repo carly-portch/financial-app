@@ -46,8 +46,30 @@ def plot_timeline():
     # Plot the timeline
     try:
         fig = px.scatter(timeline_df, x='Year', y=[0]*len(timeline_df), text='Year', title="Life Timeline")
-        fig.update_layout(showlegend=False)
-        fig.update_traces(marker=dict(size=10, color='red'), textposition='top center')
+        fig.update_layout(
+            showlegend=False,
+            yaxis=dict(visible=False),  # Hide the y-axis
+            xaxis_title="Age",
+            xaxis=dict(
+                tickmode='linear', 
+                tick0=current_age,
+                dtick=1
+            ),
+            title=dict(x=0.5)  # Center the title
+        )
+        
+        # Add red dots at current age and retirement age
+        fig.add_scatter(
+            x=[current_age, retirement_age],
+            y=[0, 0],
+            mode='markers',
+            marker=dict(size=12, color='red'),
+            showlegend=False
+        )
+        
+        # Update text position
+        fig.update_traces(textposition='top center')
+        
         st.plotly_chart(fig)
     except ValueError as e:
         st.write(f"Error plotting the timeline: {e}")
