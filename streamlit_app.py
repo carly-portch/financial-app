@@ -17,6 +17,10 @@ rate_of_return = st.number_input("Rate of Return (%)", value=5.0, step=0.1)
 # Note on rate of return
 st.write("Note: If this money will be invested in the stock market, 6-7% is the average rate of return. For a savings account, use the interest rate on your account.")
 
+# Session state to track button clicks for adding goals
+if "show_goal_form" not in st.session_state:
+    st.session_state.show_goal_form = False
+
 # Add a button to "Calculate"
 if st.button("Calculate"):
     # Calculate monthly contribution towards retirement
@@ -40,8 +44,12 @@ if st.button("Calculate"):
 # Add a section for joint goals
 st.write("### Add a Joint Goal")
 
-# Button to add a goal
+# Button to add a goal, which shows input fields
 if st.button("Add a joint goal"):
+    st.session_state.show_goal_form = True
+
+# Check if the form should be visible
+if st.session_state.show_goal_form:
     goal_name = st.text_input("Goal Name", placeholder="e.g., New House")
     goal_amount = st.number_input("Goal Amount ($)", value=50000, step=1000)
 
