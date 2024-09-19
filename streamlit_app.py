@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import date
-import math
 
 st.title("Design Your Dream Life")
 st.write("This tool helps you estimate your retirement net worth and manage goals.")
@@ -31,57 +30,6 @@ else:
 if st.button("Calculate Retirement Net Worth"):
     st.write(f"Your estimated retirement net worth at age {retirement_age} is: ${retirement_net_worth:,.2f}")
 
-# Joint goals section
-st.write("### Add a Joint Goal")
-
-if 'goals' not in st.session_state:
-    st.session_state.goals = []
-
-def add_goal():
-    st.session_state.goals.append({
-        'goal_name': '',
-        'goal_amount': 0.0,
-        'goal_rate_of_return': 5.0,
-        'goal_type': 'Desired date',
-        'goal_year': date.today().year,
-        'goal_monthly_contributions_input': 0.0,
-    })
-
-def delete_goal(index):
-    if index < len(st.session_state.goals):
-        del st.session_state.goals[index]
-
-if st.button("Add a joint goal"):
-    add_goal()
-
-for i, goal in enumerate(st.session_state.goals):
-    st.write(f"### Goal {i + 1}")
-    goal['goal_name'] = st.text_input(f"Goal name", value=goal['goal_name'], key=f"goal_name_{i}")
-    goal['goal_amount'] = st.number_input(f"Goal amount ($)", value=goal['goal_amount'], min_value=0.0, key=f"goal_amount_{i}")
-    goal['goal_rate_of_return'] = st.number_input(f"Rate of return for this goal (%)", value=goal['goal_rate_of_return'], min_value=0.0, max_value=100.0, key=f"goal_rate_of_return_{i}")
-    goal['goal_type'] = st.radio(f"Would you like to input a desired date or monthly amount?", ["Desired date", "Monthly amount"], index=0 if goal['goal_type'] == "Desired date" else 1, key=f"goal_type_{i}")
-
-    if goal['goal_type'] == "Desired date":
-        goal['goal_year'] = st.number_input(f"Desired year to reach this goal (yyyy)", value=goal['goal_year'], min_value=date.today().year, key=f"goal_year_{i}")
-        months_to_goal = (goal['goal_year'] - date.today().year) * 12
-        if months_to_goal > 0 and goal['goal_rate_of_return'] > 0:
-            goal_monthly_contributions = goal['goal_amount'] * goal['goal_rate_of_return'] / 100 / 12 / ((1 + goal['goal_rate_of_return'] / 100 / 12) ** months_to_goal - 1)
-            st.write(f"To reach {goal['goal_name']} by {goal['goal_year']}, you need to contribute ${goal_monthly_contributions:,.2f} per month.")
-        else:
-            st.write("Error: Ensure the rate of return is greater than 0 and the goal year is valid.")
-
-    elif goal['goal_type'] == "Monthly amount":
-        goal['goal_monthly_contributions_input'] = st.number_input(f"How much would you like to contribute each month?", value=goal['goal_monthly_contributions_input'], min_value=0.0, key=f"goal_monthly_contributions_input_{i}")
-        if goal['goal_monthly_contributions_input'] > 0 and goal['goal_rate_of_return'] > 0:
-            months_to_goal = math.log(goal['goal_monthly_contributions_input'] / (goal['goal_monthly_contributions_input'] - goal['goal_amount'] * goal['goal_rate_of_return'] / 100 / 12)) / math.log(1 + goal['goal_rate_of_return'] / 100 / 12)
-            goal_completion_year = int(date.today().year + months_to_goal // 12)
-            st.write(f"At ${goal['goal_monthly_contributions_input']:,.2f} per month, you'll reach {goal['goal_name']} by the year {goal_completion_year}.")
-        else:
-            st.write("Error: Ensure the rate of return and monthly contribution are greater than 0.")
-
-    if st.button(f"Delete Goal", key=f"delete_{i}"):
-        delete_goal(i)
-
 # Function to plot the timeline
 def plot_timeline():
     today = date.today()
@@ -89,20 +37,20 @@ def plot_timeline():
     
     # Create a DataFrame for the timeline
     timeline_df = pd.DataFrame({'Year': years})
-
-    # Add goals to the timeline
-    for goal in st.session_state.goals:
-        if goal['goal_type'] == 'Desired date':
-            goal_year = goal['goal_year']
-            if goal_year >= current_age and goal_year <= retirement_age:
-                timeline_df.loc[timeline_df['Year'] == goal_year, 'Goal'] = f"Goal: {goal['goal_name']}, Amount: ${goal['goal_amount']}"
+    
+    # Check DataFrame contents
+    if timeline_df.empty:
+        st.write("No data to plot.")
+        return
     
     # Plot the timeline
-    fig = px.scatter(timeline_df, x='Year', y=[0]*len(timeline_df), text='Goal', title="Life Timeline")
-    fig.update_layout(showlegend=False)
-    fig.update_traces(marker=dict(size=10, color='red'), textposition='top center')
-
-    st.plotly_chart(fig)
+    try:
+        fig = px.scatter(timeline_df, x='Year', y=[0]*len(timeline_df), text='Year', title="Life Timeline")
+        fig.update_layout(showlegend=False)
+        fig.update_traces(marker=dict(size=10, color='red'), textposition='top center')
+        st.plotly_chart(fig)
+    except ValueError as e:
+        st.write(f"Error plotting the timeline: {e}")
 
 # Call the plot function
 plot_timeline()
