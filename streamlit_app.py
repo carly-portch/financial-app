@@ -29,7 +29,6 @@ with st.expander("Add a Goal"):
 
     if goal_type == "Monthly Contribution":
         contribution_amount = st.number_input("Monthly contribution towards this goal", min_value=0.0)
-        target_year = None
         if contribution_amount > 0 and goal_amount > 0:
             rate_of_return_monthly = interest_rate / 100 / 12
             if rate_of_return_monthly > 0:
@@ -43,6 +42,8 @@ with st.expander("Add a Goal"):
                 target_year = date.today().year + int(np.ceil(months_to_goal / 12))  # Round up to ensure full year coverage
             else:
                 target_year = date.today().year + int(np.ceil(goal_amount / contribution_amount / 12))  # No interest case
+        else:
+            target_year = None
     elif goal_type == "Target Date":
         target_year = st.number_input("Target year to reach this goal (yyyy)", min_value=date.today().year)
         contribution_amount = None
@@ -50,23 +51,19 @@ with st.expander("Add a Goal"):
     # Add goal button
     if st.button("Add goal to timeline"):
         if goal_name and goal_amount > 0:
-            if goal_type == "Monthly Contribution" and target_year:
-                target_year = int(target_year)
+            if goal_type == "Monthly Contribution":
+                # Use calculated target_year
+                if target_year is None:
+                    st.error("Please provide a valid monthly contribution or target year.")
+                    return
             elif goal_type == "Target Date":
-                months_to_goal = 12 * (target_year - date.today().year)
-                rate_of_return_monthly = interest_rate / 100 / 12
-                if rate_of_return_monthly > 0:
-                    monthly_contribution = goal_amount * rate_of_return_monthly / ((1 + rate_of_return_monthly) ** months_to_goal - 1)
-                else:
-                    monthly_contribution = goal_amount / months_to_goal
-            else:
-                monthly_contribution = 0
-
+                target_year = int(target_year)
+            
             # Append goal to session state
             st.session_state.goals.append({
                 'goal_name': goal_name,
                 'goal_amount': goal_amount,
-                'monthly_contribution': contribution_amount if contribution_amount else monthly_contribution,
+                'monthly_contribution': contribution_amount if contribution_amount else 0,
                 'target_date': target_year
             })
 
