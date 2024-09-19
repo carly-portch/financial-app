@@ -73,12 +73,17 @@ for i, goal in enumerate(st.session_state.goals):
         st.write(f"Amount needed: ${goal['amount_needed']:,.2f}")
         st.write(f"Monthly contribution: ${goal['monthly_contribution']:,.2f}")
         st.write(f"Target year: {goal['target_year']}")
-        if st.button("Add to Timeline", key=f"add_{i}"):
-            st.session_state.goals[i]['added_to_timeline'] = True
-            st.write(f"Goal '{goal['name']}' added to timeline!")
-        if st.button("Remove Goal", key=f"remove_{i}"):
-            st.session_state.goals.pop(i)
-            st.write(f"Goal '{goal['name']}' removed!")
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            if st.button("Add to Timeline", key=f"add_{i}"):
+                st.session_state.goals[i]['added_to_timeline'] = True
+                st.write(f"Goal '{goal['name']}' added to timeline!")
+        with col2:
+            if st.button("Remove Goal", key=f"remove_{i}"):
+                st.session_state.goals.pop(i)
+                st.write(f"Goal '{goal['name']}' removed!")
+                # Update index after removal
+                st.session_state.goals = [g for j, g in enumerate(st.session_state.goals) if j != i]
 
 # Calculate retirement net worth button
 if st.button("Calculate Retirement Net Worth"):
@@ -160,7 +165,7 @@ if st.button("Calculate Retirement Net Worth"):
             xaxis=dict(
                 tickmode='array',
                 tickvals=[current_year, retirement_year] + [goal['target_year'] for goal in st.session_state.goals if goal['added_to_timeline']],
-                ticktext=[f"{current_year}", f"{retirement_year}"] + [f"{goal['target_year']}" for goal in st.session_state.goals if goal['added_to_timeline']]
+                ticktext=[f"{current_year}", f"{retirement_year}"] + [str(goal['target_year']) for goal in st.session_state.goals if goal['added_to_timeline']]
             ),
             showlegend=False
         )
