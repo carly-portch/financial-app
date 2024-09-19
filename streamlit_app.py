@@ -166,14 +166,13 @@ def plot_timeline():
     fig.update_traces(
         hovertemplate='<b>%{text}</b><br><br>' + timeline_df['Text'] +
         '<extra></extra>',
-        textfont=dict(size=18)  # Adjust font size for better readability
+        textfont_size=14
     )
-    
-    st.plotly_chart(fig)
-    st.session_state.plot_updated = True
 
-# Display and manage existing goals
-st.sidebar.title("Existing Goals")
+    st.plotly_chart(fig, use_container_width=True)
+
+# Display existing goals in the sidebar
+st.sidebar.header("Existing Goals")
 goal_to_remove = st.sidebar.selectbox("Select a goal to remove", [""] + [goal['goal_name'] for goal in st.session_state.goals])
 
 if st.sidebar.button("Remove Goal"):
