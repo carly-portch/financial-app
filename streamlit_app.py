@@ -42,8 +42,8 @@ def plot_timeline():
         'Year': [current_year, retirement_year],
         'Event': ['Current Age', 'Retirement Age'],
         'Text': [
-            f"Current Age: {current_age}\nMonthly Income: ${monthly_income:,.2f}\nMonthly Expenses: ${monthly_expenses:,.2f}\nAmount Going Towards Retirement: ${monthly_contributions:,.2f}",
-            f"Retirement Age: {retirement_age}\nNet Worth at Retirement: ${retirement_net_worth:,.2f}"
+            f"<b>Current Age:</b> {current_age}<br><b>Monthly Income:</b> ${monthly_income:,.2f}<br><b>Monthly Expenses:</b> ${monthly_expenses:,.2f}<br><b>Amount Going Towards Retirement:</b> ${monthly_contributions:,.2f}",
+            f"<b>Retirement Age:</b> {retirement_age}<br><b>Net Worth at Retirement:</b> ${retirement_net_worth:,.2f}"
         ]
     })
     
@@ -51,10 +51,24 @@ def plot_timeline():
     fig = go.Figure()
     
     # Add red dots for current and retirement ages
-    fig.add_trace(go.Scatter(x=[current_year, retirement_year], y=[0, 0], mode='markers', marker=dict(size=12, color='red', line=dict(width=2, color='black')), text=['Current Age', 'Retirement Age'], textposition='top center', hoverinfo='text', hovertext=timeline_df['Text']))
+    fig.add_trace(go.Scatter(
+        x=[current_year, retirement_year], 
+        y=[0, 0], 
+        mode='markers', 
+        marker=dict(size=12, color='red', line=dict(width=2, color='black')), 
+        text=['Current Age', 'Retirement Age'], 
+        textposition='top center', 
+        hoverinfo='text', 
+        hovertext=timeline_df['Text']
+    ))
     
     # Add line connecting the red dots
-    fig.add_trace(go.Scatter(x=[current_year, retirement_year], y=[0, 0], mode='lines', line=dict(color='red', width=2)))
+    fig.add_trace(go.Scatter(
+        x=[current_year, retirement_year], 
+        y=[0, 0], 
+        mode='lines', 
+        line=dict(color='red', width=2)
+    ))
     
     # Update layout
     fig.update_layout(
@@ -69,11 +83,11 @@ def plot_timeline():
         showlegend=False
     )
     
-    # Format hover text as lists
+    # Format hover text as lists and set font size
     fig.update_traces(
-        hovertemplate='<br>'.join([
-            '%{text}'
-        ])
+        hovertemplate='<b>%{text}</b><br><br>' + timeline_df['Text'] +
+        '<extra></extra>',
+        textfont=dict(size=18)  # Adjust font size for better readability
     )
     
     st.plotly_chart(fig)
