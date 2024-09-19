@@ -19,55 +19,61 @@ st.write("Note: For stock market investments, 6-7% is the average rate of return
 if 'goals' not in st.session_state:
     st.session_state.goals = []
 
-# Add a goal
 def add_goal():
-    with st.form(key='goal_form'):
-        goal_name = st.text_input("Name of Goal")
-        goal_amount = st.number_input("Amount Needed for Goal", min_value=0.0)
-        goal_type = st.radio("Calculate goal based on:", ("Target Date", "Monthly Contribution"))
-        interest_rate = st.number_input("Interest Rate (%) (if applicable)", min_value=0.0, max_value=100.0, value=0.0)
-        goal_year = None
-        monthly_contribution = None
+    if st.button("Add a Goal"):
+        with st.form(key='goal_form'):
+            goal_name = st.text_input("Name of Goal")
+            goal_amount = st.number_input("Amount Needed for Goal", min_value=0.0)
+            goal_type = st.radio("Calculate goal based on:", ("Target Date", "Monthly Contribution"))
+            interest_rate = st.number_input("Interest Rate (%) (if applicable)", min_value=0.0, max_value=100.0, value=0.0)
+            goal_year = None
+            monthly_contribution = None
 
-        if goal_type == "Target Date":
-            goal_year = st.number_input("Target Year", min_value=current_age + 1)
-            if st.form_submit_button("Calculate Goal"):
-                months_needed = (goal_year - current_age) * 12
-                if interest_rate > 0:
-                    interest_rate_monthly = interest_rate / 100 / 12
-                    monthly_contribution = goal_amount * (interest_rate_monthly * (1 + interest_rate_monthly) ** months_needed) / ((1 + interest_rate_monthly) ** months_needed - 1)
-                else:
-                    monthly_contribution = goal_amount / months_needed
-                st.write(f"To reach {goal_name} by {goal_year}, you need to contribute ${monthly_contribution:,.2f} per month.")
-        else:
-            if st.form_submit_button("Calculate Goal"):
-                months_needed = 0
-                if interest_rate > 0:
-                    interest_rate_monthly = interest_rate / 100 / 12
-                    while goal_amount > 0:
-                        goal_amount = goal_amount / (1 + interest_rate_monthly)
-                        months_needed += 1
-                else:
-                    months_needed = goal_amount
-                goal_year = current_age + (months_needed / 12)
-                st.write(f"To meet {goal_name} with a monthly contribution, the goal will be reached by {goal_year:.0f}.")
-        
-        if goal_name and goal_amount and monthly_contribution:
-            st.session_state.goals.append({
-                'goal_name': goal_name,
-                'goal_amount': goal_amount,
-                'monthly_contribution': monthly_contribution,
-                'goal_year': goal_year
-            })
+            if goal_type == "Target Date":
+                goal_year = st.number_input("Target Year", min_value=current_age + 1)
+                if st.form_submit_button("Calculate Goal"):
+                    months_needed = (goal_year - current_age) * 12
+                    if interest_rate > 0:
+                        interest_rate_monthly = interest_rate / 100 / 12
+                        monthly_contribution = goal_amount * (interest_rate_monthly * (1 + interest_rate_monthly) ** months_needed) / ((1 + interest_rate_monthly) ** months_needed - 1)
+                    else:
+                        monthly_contribution = goal_amount / months_needed
+                    st.write(f"To reach {goal_name} by {goal_year}, you need to contribute ${monthly_contribution:,.2f} per month.")
+            else:
+                if st.form_submit_button("Calculate Goal"):
+                    months_needed = 0
+                    if interest_rate > 0:
+                        interest_rate_monthly = interest_rate / 100 / 12
+                        while goal_amount > 0:
+                            goal_amount = goal_amount / (1 + interest_rate_monthly)
+                            months_needed += 1
+                    else:
+                        months_needed = goal_amount
+                    goal_year = current_age + (months_needed / 12)
+                    st.write(f"To meet {goal_name} with a monthly contribution, the goal will be reached by {goal_year:.0f}.")
 
-st.write("Add a goal:")
-add_goal_button = st.button("Add a Goal")
+            if goal_name and goal_amount and monthly_contribution:
+                st.session_state.goals.append({
+                    'goal_name': goal_name,
+                    'goal_amount': goal_amount,
+                    'monthly_contribution': monthly_contribution,
+                    'goal_year': goal_year
+                })
+                st.success(f"Goal '{goal_name}' added!")
+
+def display_goals():
+    st.write("**Goals:**")
+    for i, goal in enumerate(st.session_state.goals):
+        st.write(f"**{goal['goal_name']}** - ${goal['goal_amount']:.2f} at ${goal['monthly_contribution']:.2f} per month")
+        if st.button(f"Remove {goal['goal_name']}"):
+            st.session_state.goals.pop(i)
+            st.experimental_rerun()
+
+add_goal()
 
 # Show list of goals
-st.write("Goals:")
-for i, goal in enumerate(st.session_state.goals):
-    st.write(f"**{goal['goal_name']}** - ${goal['goal_amount']:.2f} at ${goal['monthly_contribution']:.2f} per month")
-    
+display_goals()
+
 # Calculate Retirement Net Worth
 def calculate_retirement_net_worth():
     monthly_contributions = monthly_income - monthly_expenses
