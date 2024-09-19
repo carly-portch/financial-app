@@ -24,23 +24,23 @@ if 'goals' not in st.session_state:
 with st.expander("Add a Goal"):
     goal_name = st.text_input("Name of goal")
     goal_amount = st.number_input("Amount needed for this goal", min_value=0.0)
+    interest_rate = st.number_input("Interest rate (%) for this goal (monthly compounded)", min_value=0.0, max_value=100.0, value=5.0)
     method = st.radio("Calculate goal based on:", ["Target Date", "Monthly Contribution"])
-    
+
     if method == "Monthly Contribution":
+        monthly_contribution = st.number_input("Monthly contribution towards this goal", min_value=0.0)
         goal_date = st.date_input("Estimated date to reach this goal")
-        interest_rate = st.number_input("Interest rate (%) for this goal (monthly compounded)", min_value=0.0, max_value=100.0, value=0.0)
     else:
         target_year = st.number_input("Year you want to reach this goal", min_value=current_age + 1)
-        interest_rate = st.number_input("Interest rate (%) for this goal (monthly compounded)", min_value=0.0, max_value=100.0, value=0.0)
-        
+
     if st.button("Add Goal"):
         if method == "Monthly Contribution":
             months_until_goal = (goal_date.year - date.today().year) * 12 + (goal_date.month - date.today().month)
             rate_of_return_monthly = interest_rate / 100 / 12
             if rate_of_return_monthly > 0:
-                monthly_contribution_needed = goal_amount / (((1 + rate_of_return_monthly) ** months_until_goal - 1) / rate_of_return_monthly)
+                goal_amount_calculated = monthly_contribution * (((1 + rate_of_return_monthly) ** months_until_goal - 1) / rate_of_return_monthly)
             else:
-                monthly_contribution_needed = goal_amount / months_until_goal
+                goal_amount_calculated = monthly_contribution * months_until_goal
         else:
             months_until_goal = (target_year - current_age) * 12
             rate_of_return_monthly = interest_rate / 100 / 12
@@ -48,11 +48,11 @@ with st.expander("Add a Goal"):
                 monthly_contribution_needed = goal_amount / (((1 + rate_of_return_monthly) ** months_until_goal - 1) / rate_of_return_monthly)
             else:
                 monthly_contribution_needed = goal_amount / months_until_goal
-        
+
         st.session_state.goals.append({
             'goal_name': goal_name,
-            'goal_amount': goal_amount,
-            'monthly_contribution_needed': monthly_contribution_needed,
+            'goal_amount': goal_amount if method == "Monthly Contribution" else goal_amount_calculated,
+            'monthly_contribution_needed': monthly_contribution_needed if method == "Target Date" else monthly_contribution,
             'target_year': target_year if method == "Target Date" else goal_date.year
         })
 
