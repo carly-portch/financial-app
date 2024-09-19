@@ -27,18 +27,27 @@ with st.expander("Add a Goal"):
     method = st.radio("Calculate goal based on:", ["Target Date", "Monthly Contribution"])
     
     if method == "Monthly Contribution":
-        interest_rate = st.number_input("Interest rate (%) for this goal (monthly compounded)", min_value=0.0, max_value=100.0, value=0.0)
         goal_date = st.date_input("Estimated date to reach this goal")
+        interest_rate = st.number_input("Interest rate (%) for this goal (monthly compounded)", min_value=0.0, max_value=100.0, value=0.0)
     else:
         target_year = st.number_input("Year you want to reach this goal", min_value=current_age + 1)
+        interest_rate = st.number_input("Interest rate (%) for this goal (monthly compounded)", min_value=0.0, max_value=100.0, value=0.0)
         
     if st.button("Add Goal"):
         if method == "Monthly Contribution":
             months_until_goal = (goal_date.year - date.today().year) * 12 + (goal_date.month - date.today().month)
-            monthly_contribution_needed = goal_amount / (((1 + (interest_rate / 100 / 12)) ** months_until_goal - 1) / (interest_rate / 100 / 12))
+            rate_of_return_monthly = interest_rate / 100 / 12
+            if rate_of_return_monthly > 0:
+                monthly_contribution_needed = goal_amount / (((1 + rate_of_return_monthly) ** months_until_goal - 1) / rate_of_return_monthly)
+            else:
+                monthly_contribution_needed = goal_amount / months_until_goal
         else:
             months_until_goal = (target_year - current_age) * 12
-            monthly_contribution_needed = goal_amount / months_until_goal
+            rate_of_return_monthly = interest_rate / 100 / 12
+            if rate_of_return_monthly > 0:
+                monthly_contribution_needed = goal_amount / (((1 + rate_of_return_monthly) ** months_until_goal - 1) / rate_of_return_monthly)
+            else:
+                monthly_contribution_needed = goal_amount / months_until_goal
         
         st.session_state.goals.append({
             'goal_name': goal_name,
