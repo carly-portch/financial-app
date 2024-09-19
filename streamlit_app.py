@@ -9,11 +9,11 @@ st.write("This tool helps you estimate your retirement net worth and manage goal
 st.write("Enter the required information below:")
 
 # Input fields for retirement calculation
-current_age = st.number_input("Enter your current age", min_value=0, key='current_age')
-retirement_age = st.number_input("Enter your desired retirement age", min_value=current_age + 1, key='retirement_age')
-monthly_income = st.number_input("Enter your monthly income after tax", min_value=0.0, key='monthly_income')
-monthly_expenses = st.number_input("Enter your monthly expenses", min_value=0.0, key='monthly_expenses')
-rate_of_return = st.number_input("Rate of return (%)", min_value=0.0, max_value=100.0, value=5.0, key='rate_of_return')
+current_age = st.number_input("Enter your current age", min_value=0)
+retirement_age = st.number_input("Enter your desired retirement age", min_value=current_age + 1)
+monthly_income = st.number_input("Enter your monthly income after tax", min_value=0.0)
+monthly_expenses = st.number_input("Enter your monthly expenses", min_value=0.0)
+rate_of_return = st.number_input("Rate of return (%)", min_value=0.0, max_value=100.0, value=5.0)
 st.write("Note: For stock market investments, 6-7% is the average rate of return; for savings, input the interest rate of your savings account.")
 
 # Compound interest calculation
@@ -28,52 +28,70 @@ if rate_of_return_monthly > 0:
 else:
     retirement_net_worth = monthly_contributions * months_to_retirement
 
-# Plotting timeline
+# Display retirement net worth
+if st.button("Calculate Retirement Net Worth"):
+    st.write(f"Your estimated retirement net worth at age {retirement_age} is: ${retirement_net_worth:,.2f}")
+
+# Plot timeline
 def plot_timeline():
-    years = list(range(current_age, retirement_age + 1))
-    years_as_dates = [date.today().year + year - current_age for year in years]
-
-    # Create DataFrame for plotting
+    today = date.today()
+    current_year = today.year
+    retirement_year = current_year + (retirement_age - current_age)
+    
+    # Create timeline data
     timeline_df = pd.DataFrame({
-        'Year': years_as_dates,
-        'Age': years,
-        'Text': [''] * len(years)  # Initialize with empty text
+        'Year': [current_year, retirement_year],
+        'Event': ['Current Age', 'Retirement Age'],
+        'Text': [
+            f"<b>Current Age:</b> {current_age}<br><b>Monthly Income:</b> ${monthly_income:,.2f}<br><b>Monthly Expenses:</b> ${monthly_expenses:,.2f}<br><b>Amount Going Towards Retirement:</b> ${monthly_contributions:,.2f}",
+            f"<b>Retirement Age:</b> {retirement_age}<br><b>Net Worth at Retirement:</b> ${retirement_net_worth:,.2f}"
+        ]
     })
-
-    # Update the text for the dots
-    timeline_df.loc[timeline_df['Age'] == current_age, 'Text'] = [f'Current Age: {current_age}\nMonthly Income: ${monthly_income:,.2f}\nExpenses: ${monthly_expenses:,.2f}\nSavings to Retirement: ${monthly_contributions:,.2f}']
-    timeline_df.loc[timeline_df['Age'] == retirement_age, 'Text'] = [f'Retirement Age: {retirement_age}\nEstimated Net Worth: ${retirement_net_worth:,.2f}']
-
+    
+    # Create the figure
     fig = go.Figure()
-
-    # Add line across the timeline
-    fig.add_trace(go.Scatter(x=[years_as_dates[0], years_as_dates[-1]], y=[0, 0], mode='lines', line=dict(color='gray', width=2), showlegend=False))
-
-    # Add red dots at current age and retirement age
+    
+    # Add red dots for current and retirement ages
     fig.add_trace(go.Scatter(
-        x=timeline_df['Year'],
-        y=[0] * len(timeline_df),
-        mode='markers+text',
-        text=timeline_df['Text'],
-        textposition='top center',
-        marker=dict(color='red', size=10),
-        showlegend=False
+        x=[current_year, retirement_year], 
+        y=[0, 0], 
+        mode='markers', 
+        marker=dict(size=12, color='red', line=dict(width=2, color='black')), 
+        text=['Current Age', 'Retirement Age'], 
+        textposition='top center', 
+        hoverinfo='text', 
+        hovertext=timeline_df['Text']
     ))
-
+    
+    # Add line connecting the red dots
+    fig.add_trace(go.Scatter(
+        x=[current_year, retirement_year], 
+        y=[0, 0], 
+        mode='lines', 
+        line=dict(color='red', width=2)
+    ))
+    
+    # Update layout
     fig.update_layout(
         title="Life Timeline",
-        xaxis_title="Year",
-        yaxis=dict(showticklabels=False),  # Hide y-axis labels
+        xaxis_title='Year',
+        yaxis=dict(visible=False),
         xaxis=dict(
-            tickvals=[year for year in years_as_dates], 
-            ticktext=[str(year) for year in years_as_dates]
+            tickmode='array',
+            tickvals=[current_year, retirement_year],
+            ticktext=[f"{current_year}", f"{retirement_year}"]
         ),
-        textfont=dict(size=20)
+        showlegend=False
     )
-
-    st.plotly_chart(fig, use_container_width=True)
-
-plot_timeline()
+    
+    # Format hover text as lists and set font size
+    fig.update_traces(
+        hovertemplate='<b>%{text}</b><br><br>' + timeline_df['Text'] +
+        '<extra></extra>',
+        textfont=dict(size=18)  # Adjust font size for better readability
+    )
+    
+    st.plotly_chart(fig)
 
 # Add a goal section
 st.write("### Add a Goal")
