@@ -33,37 +33,37 @@ if st.button("Calculate Retirement Net Worth"):
 # Function to plot the timeline
 def plot_timeline():
     today = date.today()
+    current_year = today.year
     years = list(range(current_age, retirement_age + 1))
+    years_as_dates = [current_year + (age - current_age) for age in years]
     
     # Create a DataFrame for the timeline
-    timeline_df = pd.DataFrame({'Year': years})
-    
-    # Check DataFrame contents
-    if timeline_df.empty:
-        st.write("No data to plot.")
-        return
+    timeline_df = pd.DataFrame({'Age': years, 'Year': years_as_dates})
     
     # Plot the timeline
     try:
-        fig = px.scatter(timeline_df, x='Year', y=[0]*len(timeline_df), text='Year', title="Life Timeline")
+        fig = px.scatter(timeline_df, x='Year', y=[0]*len(timeline_df), text='Age', title="Life Timeline")
         fig.update_layout(
             showlegend=False,
             yaxis=dict(visible=False),  # Hide the y-axis
-            xaxis_title="Age",
+            xaxis_title="Year",
             xaxis=dict(
-                tickmode='linear', 
-                tick0=current_age,
-                dtick=1
+                tickmode='array',
+                tickvals=[years_as_dates[0], years_as_dates[-1]],
+                ticktext=[str(years_as_dates[0]), str(years_as_dates[-1])],
+                showticklabels=True  # Show labels only at the ends
             ),
             title=dict(x=0.5)  # Center the title
         )
         
         # Add red dots at current age and retirement age
         fig.add_scatter(
-            x=[current_age, retirement_age],
+            x=[current_year + (current_age - current_age), current_year + (retirement_age - current_age)],
             y=[0, 0],
-            mode='markers',
+            mode='markers+text',
             marker=dict(size=12, color='red'),
+            text=[current_age, retirement_age],
+            textposition='top center',
             showlegend=False
         )
         
