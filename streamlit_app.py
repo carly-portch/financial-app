@@ -21,7 +21,10 @@ months_to_retirement = years_to_retirement * 12
 rate_of_return_monthly = rate_of_return / 100 / 12
 
 # Compound interest formula
-retirement_net_worth = monthly_contributions * ((1 + rate_of_return_monthly) ** months_to_retirement - 1) / rate_of_return_monthly
+if rate_of_return_monthly > 0:
+    retirement_net_worth = monthly_contributions * ((1 + rate_of_return_monthly) ** months_to_retirement - 1) / rate_of_return_monthly
+else:
+    retirement_net_worth = monthly_contributions * months_to_retirement
 
 # Display retirement net worth
 if st.button("Calculate Retirement Net Worth"):
@@ -43,14 +46,20 @@ if st.button("Add a joint goal"):
     if goal_type == "Desired date":
         goal_year = st.number_input("Desired year to reach this goal (yyyy)", min_value=date.today().year, key=f"goal_year_{len(st.session_state.goals)}")
         months_to_goal = (goal_year - date.today().year) * 12
-        goal_monthly_contributions = goal_amount * goal_rate_of_return / 100 / 12 / ((1 + goal_rate_of_return / 100 / 12) ** months_to_goal - 1)
-        st.write(f"To reach {goal_name} by {goal_year}, you need to contribute ${goal_monthly_contributions:,.2f} per month.")
+        if months_to_goal > 0 and goal_rate_of_return > 0:
+            goal_monthly_contributions = goal_amount * goal_rate_of_return / 100 / 12 / ((1 + goal_rate_of_return / 100 / 12) ** months_to_goal - 1)
+            st.write(f"To reach {goal_name} by {goal_year}, you need to contribute ${goal_monthly_contributions:,.2f} per month.")
+        else:
+            st.write("Error: Ensure the rate of return is greater than 0 and the goal year is valid.")
 
     elif goal_type == "Monthly amount":
         goal_monthly_contributions_input = st.number_input("How much would you like to contribute each month?", min_value=0.0, key=f"goal_monthly_contributions_input_{len(st.session_state.goals)}")
-        months_to_goal = math.log(goal_monthly_contributions_input / (goal_monthly_contributions_input - goal_amount * goal_rate_of_return / 100 / 12)) / math.log(1 + goal_rate_of_return / 100 / 12)
-        goal_completion_year = int(date.today().year + months_to_goal // 12)
-        st.write(f"At ${goal_monthly_contributions_input:,.2f} per month, you'll reach {goal_name} by the year {goal_completion_year}.")
+        if goal_monthly_contributions_input > 0 and goal_rate_of_return > 0:
+            months_to_goal = math.log(goal_monthly_contributions_input / (goal_monthly_contributions_input - goal_amount * goal_rate_of_return / 100 / 12)) / math.log(1 + goal_rate_of_return / 100 / 12)
+            goal_completion_year = int(date.today().year + months_to_goal // 12)
+            st.write(f"At ${goal_monthly_contributions_input:,.2f} per month, you'll reach {goal_name} by the year {goal_completion_year}.")
+        else:
+            st.write("Error: Ensure the rate of return and monthly contribution are greater than 0.")
 
     # Store the goal in session state
     st.session_state.goals.append((goal_name, goal_amount, goal_rate_of_return, goal_type))
