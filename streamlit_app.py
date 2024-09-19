@@ -29,21 +29,15 @@ with st.expander("Add a Goal"):
 
     if goal_type == "Monthly Contribution":
         contribution_amount = st.number_input("Monthly contribution towards this goal", min_value=0.0)
+        target_date = None
         if contribution_amount > 0 and goal_amount > 0:
             rate_of_return_monthly = interest_rate / 100 / 12
             if rate_of_return_monthly > 0:
                 # Calculate months required to reach goal
-                numerator = np.log(contribution_amount / (contribution_amount - goal_amount * rate_of_return_monthly))
-                denominator = np.log(1 + rate_of_return_monthly)
-                if denominator == 0:  # Avoid division by zero
-                    months_to_goal = float('inf')  # Set to infinity if no growth
-                else:
-                    months_to_goal = numerator / denominator
-                target_year = date.today().year + int(np.ceil(months_to_goal / 12))  # Round up to ensure full year coverage
+                months_to_goal = np.log(contribution_amount / (contribution_amount - goal_amount * rate_of_return_monthly)) / np.log(1 + rate_of_return_monthly)
+                target_year = date.today().year + int(months_to_goal // 12)
             else:
-                target_year = date.today().year + int(np.ceil(goal_amount / contribution_amount / 12))  # No interest case
-        else:
-            target_year = None
+                target_year = date.today().year + int(goal_amount / contribution_amount // 12)
     elif goal_type == "Target Date":
         target_year = st.number_input("Target year to reach this goal (yyyy)", min_value=date.today().year)
         contribution_amount = None
@@ -52,30 +46,27 @@ with st.expander("Add a Goal"):
     if st.button("Add goal to timeline"):
         if goal_name and goal_amount > 0:
             if goal_type == "Monthly Contribution":
-                # Use calculated target_year
-                if target_year is None:
-                    st.error("Please provide a valid monthly contribution or target year.")
-                else:
-                    # Append goal to session state
-                    st.session_state.goals.append({
-                        'goal_name': goal_name,
-                        'goal_amount': goal_amount,
-                        'monthly_contribution': contribution_amount if contribution_amount else 0,
-                        'target_date': target_year
-                    })
-                    st.success(f"Goal '{goal_name}' added successfully.")
-                    st.session_state.plot_updated = False  # Flag to update the plot
-            elif goal_type == "Target Date":
                 target_year = int(target_year)
-                # Append goal to session state
-                st.session_state.goals.append({
-                    'goal_name': goal_name,
-                    'goal_amount': goal_amount,
-                    'monthly_contribution': contribution_amount if contribution_amount else 0,
-                    'target_date': target_year
-                })
-                st.success(f"Goal '{goal_name}' added successfully.")
-                st.session_state.plot_updated = False  # Flag to update the plot
+            elif goal_type == "Target Date":
+                months_to_goal = 12 * (target_year - date.today().year)
+                rate_of_return_monthly = interest_rate / 100 / 12
+                if rate_of_return_monthly > 0:
+                    monthly_contribution = goal_amount * rate_of_return_monthly / ((1 + rate_of_return_monthly) ** months_to_goal - 1)
+                else:
+                    monthly_contribution = goal_amount / months_to_goal
+            else:
+                monthly_contribution = 0
+
+            # Append goal to session state
+            st.session_state.goals.append({
+                'goal_name': goal_name,
+                'goal_amount': goal_amount,
+                'monthly_contribution': contribution_amount if contribution_amount else monthly_contribution,
+                'target_date': target_year
+            })
+
+            st.success(f"Goal '{goal_name}' added successfully.")
+            st.session_state.plot_updated = False  # Flag to update the plot
         else:
             st.error("Please enter a valid goal name and amount.")
 
@@ -171,12 +162,19 @@ def plot_timeline():
         showlegend=False
     )
     
-    st.plotly_chart(fig)
-    st.session_state.plot_updated = True
+    # Format hover text as lists and set font size
+    fig.update_traces(
+        hovertemplate='<b>%{text}</b><br><br>' + timeline_df['Text'] +
+        '<extra></extra>',
+        textfont_size=14
+    )
 
-# Display existing goals and provide option to remove
-st.sidebar.header("Manage Goals")
+    st.plotly_chart(fig, use_container_width=True)
+
+# Display existing goals in the sidebar
+st.sidebar.header("Existing Goals")
 goal_to_remove = st.sidebar.selectbox("Select a goal to remove", [""] + [goal['goal_name'] for goal in st.session_state.goals])
+
 if st.sidebar.button("Remove Goal"):
     if goal_to_remove:
         st.session_state.goals = [goal for goal in st.session_state.goals if goal['goal_name'] != goal_to_remove]
