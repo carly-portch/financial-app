@@ -41,15 +41,28 @@ def plot_timeline():
     timeline_df = pd.DataFrame({
         'Year': [current_year, retirement_year],
         'Event': ['Current Age', 'Retirement Age'],
-        'Value': [0, 0],
         'Text': [f"Current Age: {current_age}\nMonthly Income: ${monthly_income:,.2f}\nMonthly Expenses: ${monthly_expenses:,.2f}\nAmount Going Towards Retirement: ${monthly_contributions:,.2f}",
                  f"Retirement Age: {retirement_age}\nNet Worth at Retirement: ${retirement_net_worth:,.2f}"]
     })
     
-    fig = px.scatter(timeline_df, x='Year', y=[0]*len(timeline_df), text='Text', title="Life Timeline", labels={'Year': 'Year'}, text_auto=True)
+    fig = px.scatter(timeline_df, x='Year', y=[0]*len(timeline_df), text='Text', title="Life Timeline", labels={'Year': 'Year'})
     
     fig.update_traces(marker=dict(size=12, color='red', line=dict(width=2, color='black')), selector=dict(mode='markers+text'))
-    fig.update_layout(showlegend=False, xaxis_title='Year', yaxis_visible=False, xaxis=dict(tickmode='array', tickvals=[current_year, retirement_year], ticktext=[f"{current_year}", f"{retirement_year}"]))
+    fig.update_layout(showlegend=False, xaxis_title='Year', yaxis=dict(visible=False), xaxis=dict(tickmode='array', tickvals=[current_year, retirement_year], ticktext=[f"{current_year}", f"{retirement_year}"]))
+    
+    fig.update_layout(
+        xaxis_title='Year',
+        yaxis_visible=False,
+        xaxis=dict(tickmode='array', tickvals=[current_year, retirement_year], ticktext=[f"{current_year}", f"{retirement_year}"])
+    )
+    
+    # Add hover text with detailed information
+    fig.update_traces(
+        texttemplate='%{text}',
+        hovertemplate='<br>'.join([
+            '%{text}'
+        ])
+    )
     
     st.plotly_chart(fig)
 
