@@ -66,6 +66,8 @@ with st.expander("Add a Goal"):
             })
 
             st.success(f"Goal '{goal_name}' added successfully.")
+            # Re-plot the timeline
+            st.session_state.update({'plot_updated': False})
         else:
             st.error("Please enter a valid goal name and amount.")
 
@@ -102,6 +104,9 @@ def calculate_retirement_net_worth_with_goals():
 
 # Plot timeline
 def plot_timeline():
+    if 'plot_updated' in st.session_state and st.session_state.plot_updated:
+        return  # Skip plotting if already updated
+    
     today = date.today()
     current_year = today.year
     retirement_year = current_year + (retirement_age - current_age)
@@ -165,15 +170,16 @@ def plot_timeline():
     )
     
     st.plotly_chart(fig)
+    st.session_state.plot_updated = True
 
 # Display and manage existing goals
 st.sidebar.title("Existing Goals")
-goal_to_remove = st.sidebar.selectbox("Select a goal to remove", options=[""] + [goal['goal_name'] for goal in st.session_state.goals])
-if st.sidebar.button("Remove Selected Goal"):
+goal_to_remove = st.sidebar.selectbox("Select a goal to remove", [""] + [goal['goal_name'] for goal in st.session_state.goals])
+if st.sidebar.button("Remove Goal"):
     if goal_to_remove:
         st.session_state.goals = [goal for goal in st.session_state.goals if goal['goal_name'] != goal_to_remove]
-        st.success(f"Goal '{goal_to_remove}' removed.")
-        plot_timeline()
+        st.sidebar.success(f"Goal '{goal_to_remove}' removed successfully.")
+        st.session_state.plot_updated = False
     else:
         st.sidebar.error("Please select a goal to remove.")
 
