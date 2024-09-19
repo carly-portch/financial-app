@@ -57,6 +57,9 @@ for i, goal in enumerate(st.session_state.goals):
         st.session_state.goals.pop(i)
         st.experimental_rerun()
 
+# Initialize `retirement_net_worth` to a default value
+retirement_net_worth = 0.0
+
 # Calculate retirement button
 if st.button("Calculate Retirement"):
     # Calculate remaining savings
