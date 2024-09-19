@@ -29,7 +29,7 @@ with st.expander("Add a Goal"):
 
     if goal_type == "Monthly Contribution":
         contribution_amount = st.number_input("Monthly contribution towards this goal", min_value=0.0)
-        target_date = None
+        target_year = None
         if contribution_amount > 0 and goal_amount > 0:
             rate_of_return_monthly = interest_rate / 100 / 12
             if rate_of_return_monthly > 0:
@@ -50,7 +50,7 @@ with st.expander("Add a Goal"):
     # Add goal button
     if st.button("Add goal to timeline"):
         if goal_name and goal_amount > 0:
-            if goal_type == "Monthly Contribution":
+            if goal_type == "Monthly Contribution" and target_year:
                 target_year = int(target_year)
             elif goal_type == "Target Date":
                 months_to_goal = 12 * (target_year - date.today().year)
