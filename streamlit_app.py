@@ -1,9 +1,7 @@
 import streamlit as st
 from datetime import date
 import math
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-import numpy as np
+import pandas as pd
 
 st.title("Design Your Dream Life")
 st.write("This tool helps you estimate your retirement net worth and manage goals.")
@@ -90,42 +88,9 @@ for i, goal in enumerate(st.session_state.goals):
         else:
             st.write("Error: Ensure the rate of return and monthly contribution are greater than 0.")
 
-# Plot age timeline with goals
-def plot_timeline():
-    fig, ax = plt.subplots(figsize=(10, 6))
-
-    # Time range for the timeline
-    current_date = date(date.today().year, 1, 1)
-    retirement_date = date(current_date.year + (retirement_age - current_age), 12, 31)
-
-    # Set up the x-axis with years
-    ax.set_xlim(current_date, retirement_date)
-    ax.xaxis.set_major_locator(mdates.YearLocator())
-    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
-    
-    # Plot current age and retirement age
-    ax.axvline(x=date(current_date.year + current_age, 1, 1), color='blue', linestyle='--', label=f"Current Age ({current_age})")
-    ax.axvline(x=date(current_date.year + retirement_age, 12, 31), color='red', linestyle='--', label=f"Retirement Age ({retirement_age})")
-
-    # Plot goals
-    for goal in st.session_state.goals:
-        if goal['goal_type'] == "Desired date":
-            goal_date = date(goal['goal_year'], 1, 1)
-            ax.plot(goal_date, 0, 'rx', markersize=10, label=f"{goal['goal_name']} (${goal['goal_amount']})")
-        elif goal['goal_type'] == "Monthly amount":
-            # Calculate the goal date based on monthly contributions
-            if goal['goal_monthly_contributions_input'] > 0 and goal['goal_rate_of_return'] > 0:
-                months_to_goal = math.log(goal['goal_monthly_contributions_input'] / (goal['goal_monthly_contributions_input'] - goal['goal_amount'] * goal['goal_rate_of_return'] / 100 / 12)) / math.log(1 + goal['goal_rate_of_return'] / 100 / 12)
-                goal_date = date(date.today().year + int(months_to_goal // 12), 1, 1)
-                ax.plot(goal_date, 0, 'rx', markersize=10, label=f"{goal['goal_name']} (${goal['goal_amount']})")
-
-    # Format the plot
-    ax.set_xlabel('Year')
-    ax.set_title('Timeline of Goals and Retirement')
-    ax.legend()
-    plt.grid(True)
-
-    st.pyplot(fig)
-
-# Display the timeline
-plot_timeline()
+# Create a timeline DataFrame
+def create_timeline_data():
+    data = []
+    current_year = date.today().year
+    for year in range(current_year, retirement_age + 1):
+        data.append({'Year': year, 'Current Age': year - current_
