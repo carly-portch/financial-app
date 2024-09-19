@@ -2,6 +2,7 @@ import streamlit as st
 from datetime import date
 import math
 import pandas as pd
+import plotly.express as px
 
 st.title("Design Your Dream Life")
 st.write("This tool helps you estimate your retirement net worth and manage goals.")
@@ -112,26 +113,16 @@ def plot_timeline():
     timeline_df = create_timeline_data()
     st.write("### Timeline")
     
-    st.write("Columns in timeline_df:", timeline_df.columns)
-    
     # Check if required columns are present
-    if 'Year' not in timeline_df.columns:
-        st.write("Error: 'Year' column is missing from timeline_df.")
-        return
-    if 'Current Age' not in timeline_df.columns:
-        st.write("Error: 'Current Age' column is missing from timeline_df.")
-        return
-    if 'Goal' not in timeline_df.columns:
-        st.write("Error: 'Goal' column is missing from timeline_df.")
+    required_columns = ['Year', 'Current Age', 'Goal']
+    missing_columns = [col for col in required_columns if col not in timeline_df.columns]
+    if missing_columns:
+        st.write(f"Error: Missing columns {missing_columns} from timeline_df.")
         return
 
-    # Create a timeline chart
-    timeline_chart = pd.DataFrame({
-        'Year': timeline_df['Year'],
-        'Current Age': timeline_df['Current Age'] if 'Current Age' in timeline_df.columns else pd.NA,
-        'Goal': timeline_df['Goal'] if 'Goal' in timeline_df.columns else pd.NA
-    }).dropna()
-
-    st.line_chart(timeline_chart.set_index('Year'))
+    # Create a Plotly figure
+    fig = px.scatter(timeline_df, x='Year', y='Current Age', text='Goal', title="Life Timeline", labels={"Year": "Year", "Current Age": "Age"})
+    fig.update_traces(textposition='top center')
+    st.plotly_chart(fig)
 
 plot_timeline()
