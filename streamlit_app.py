@@ -164,10 +164,20 @@ def plot_timeline():
     
     st.plotly_chart(fig)
 
-# Calculate and display retirement net worth
+# Display and manage existing goals
+st.sidebar.title("Existing Goals")
+goal_to_remove = st.sidebar.selectbox("Select a goal to remove", options=[""] + [goal['goal_name'] for goal in st.session_state.goals])
+if st.sidebar.button("Remove Selected Goal"):
+    if goal_to_remove:
+        st.session_state.goals = [goal for goal in st.session_state.goals if goal['goal_name'] != goal_to_remove]
+        st.success(f"Goal '{goal_to_remove}' removed successfully.")
+    else:
+        st.error("Please select a goal to remove.")
+
+# Calculate retirement based on remaining savings after goals
 if st.button("Calculate Retirement"):
     if st.session_state.goals:
-        st.write(f"Your estimated retirement net worth at age {retirement_age} is: ${calculate_retirement_net_worth_with_goals():,.2f}")
+        st.write(f"Your estimated retirement net worth at age {retirement_age} after considering goals is: ${calculate_retirement_net_worth_with_goals():,.2f}")
     else:
         st.write(f"Your estimated retirement net worth at age {retirement_age} without goals is: ${calculate_retirement_net_worth_without_goals():,.2f}")
 
