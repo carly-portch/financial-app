@@ -29,15 +29,16 @@ with st.expander("Add a Goal"):
 
     if goal_type == "Monthly Contribution":
         contribution_amount = st.number_input("Monthly contribution towards this goal", min_value=0.0)
-        target_date = None
         if contribution_amount > 0 and goal_amount > 0:
             rate_of_return_monthly = interest_rate / 100 / 12
             if rate_of_return_monthly > 0:
                 # Calculate months required to reach goal
                 months_to_goal = np.log(contribution_amount / (contribution_amount - goal_amount * rate_of_return_monthly)) / np.log(1 + rate_of_return_monthly)
-                target_year = date.today().year + int(months_to_goal // 12)
+                target_year = date.today().year + int(np.ceil(months_to_goal / 12))
             else:
-                target_year = date.today().year + int(goal_amount / contribution_amount // 12)
+                target_year = date.today().year + int(np.ceil(goal_amount / contribution_amount / 12))
+        else:
+            target_year = None
     elif goal_type == "Target Date":
         target_year = st.number_input("Target year to reach this goal (yyyy)", min_value=date.today().year)
         contribution_amount = None
@@ -46,7 +47,7 @@ with st.expander("Add a Goal"):
     if st.button("Add goal to timeline"):
         if goal_name and goal_amount > 0:
             if goal_type == "Monthly Contribution":
-                target_year = int(target_year)
+                target_year = int(target_year)  # Convert to integer
             elif goal_type == "Target Date":
                 months_to_goal = 12 * (target_year - date.today().year)
                 rate_of_return_monthly = interest_rate / 100 / 12
