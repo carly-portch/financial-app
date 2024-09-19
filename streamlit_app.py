@@ -55,20 +55,27 @@ with st.expander("Add a Goal"):
                 # Use calculated target_year
                 if target_year is None:
                     st.error("Please provide a valid monthly contribution or target year.")
-                    return
+                else:
+                    # Append goal to session state
+                    st.session_state.goals.append({
+                        'goal_name': goal_name,
+                        'goal_amount': goal_amount,
+                        'monthly_contribution': contribution_amount if contribution_amount else 0,
+                        'target_date': target_year
+                    })
+                    st.success(f"Goal '{goal_name}' added successfully.")
+                    st.session_state.plot_updated = False  # Flag to update the plot
             elif goal_type == "Target Date":
                 target_year = int(target_year)
-            
-            # Append goal to session state
-            st.session_state.goals.append({
-                'goal_name': goal_name,
-                'goal_amount': goal_amount,
-                'monthly_contribution': contribution_amount if contribution_amount else 0,
-                'target_date': target_year
-            })
-
-            st.success(f"Goal '{goal_name}' added successfully.")
-            st.session_state.plot_updated = False  # Flag to update the plot
+                # Append goal to session state
+                st.session_state.goals.append({
+                    'goal_name': goal_name,
+                    'goal_amount': goal_amount,
+                    'monthly_contribution': contribution_amount if contribution_amount else 0,
+                    'target_date': target_year
+                })
+                st.success(f"Goal '{goal_name}' added successfully.")
+                st.session_state.plot_updated = False  # Flag to update the plot
         else:
             st.error("Please enter a valid goal name and amount.")
 
@@ -170,7 +177,6 @@ def plot_timeline():
 # Display existing goals and provide option to remove
 st.sidebar.header("Manage Goals")
 goal_to_remove = st.sidebar.selectbox("Select a goal to remove", [""] + [goal['goal_name'] for goal in st.session_state.goals])
-
 if st.sidebar.button("Remove Goal"):
     if goal_to_remove:
         st.session_state.goals = [goal for goal in st.session_state.goals if goal['goal_name'] != goal_to_remove]
