@@ -98,7 +98,7 @@ def plot_timeline():
         'Year': [current_year, retirement_year] + goal_years,
         'Event': ['Current Age', 'Retirement Age'] + ['Goal'] * len(goal_years),
         'Text': [
-            f"<b>Current Age:</b> {current_age}<br><b>Monthly Income:</b> ${monthly_income:,.2f}<br><b>Monthly Expenses:</b> ${monthly_expenses:,.2f}<br><b>Amount Going Towards Retirement:</b> ${monthly_contributions:,.2f}",
+            f"<b>Current Age:</b> {current_age}<br><b>Monthly Income:</b> ${monthly_income:,.2f}<br><b>Monthly Expenses:</b> ${monthly_expenses:,.2f}<br><b>Amount Going Towards Retirement:</b> ${monthly_income - monthly_expenses:,.2f}",
             f"<b>Retirement Age:</b> {retirement_age}<br><b>Net Worth at Retirement:</b> ${retirement_net_worth:,.2f}"
         ] + [
             f"<b>Goal Name:</b> {goal['goal_name']}<br><b>Amount Needed:</b> ${goal['goal_amount']:.2f}<br><b>Monthly Contribution:</b> ${goal['monthly_contribution']:.2f}"
