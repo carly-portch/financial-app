@@ -1,34 +1,33 @@
 import streamlit as st
-from datetime import date
-import math
 import pandas as pd
 import plotly.express as px
+from datetime import date
+import math
 
 st.title("Design Your Dream Life")
 st.write("This tool helps you estimate your retirement net worth and manage goals.")
 st.write("Enter the required information below:")
 
 # Input fields for retirement calculation
-current_age = st.number_input("Enter your current age", min_value=0)
-retirement_age = st.number_input("Enter your desired retirement age", min_value=current_age + 1)
-monthly_income = st.number_input("Enter your monthly income after tax", min_value=0.0)
-monthly_expenses = st.number_input("Enter your monthly expenses", min_value=0.0)
-rate_of_return = st.number_input("Rate of return (%)", min_value=0.0, max_value=100.0, value=5.0)
+current_age = st.number_input("Enter your current age", min_value=0, key="current_age")
+retirement_age = st.number_input("Enter your desired retirement age", min_value=current_age + 1, key="retirement_age")
+monthly_income = st.number_input("Enter your monthly income after tax", min_value=0.0, key="monthly_income")
+monthly_expenses = st.number_input("Enter your monthly expenses", min_value=0.0, key="monthly_expenses")
+rate_of_return = st.number_input("Rate of return (%)", min_value=0.0, max_value=100.0, value=5.0, key="rate_of_return")
 st.write("Note: For stock market investments, 6-7% is the average rate of return; for savings, input the interest rate of your savings account.")
 
-# Compound interest calculation
+# Calculate retirement net worth
 monthly_contributions = monthly_income - monthly_expenses
 years_to_retirement = retirement_age - current_age
 months_to_retirement = years_to_retirement * 12
 rate_of_return_monthly = rate_of_return / 100 / 12
 
-# Compound interest formula
+# Compound interest calculation
 if rate_of_return_monthly > 0:
     retirement_net_worth = monthly_contributions * ((1 + rate_of_return_monthly) ** months_to_retirement - 1) / rate_of_return_monthly
 else:
     retirement_net_worth = monthly_contributions * months_to_retirement
 
-# Display retirement net worth
 if st.button("Calculate Retirement Net Worth"):
     st.write(f"Your estimated retirement net worth at age {retirement_age} is: ${retirement_net_worth:,.2f}")
 
@@ -52,20 +51,11 @@ def delete_goal(index):
     if index < len(st.session_state.goals):
         del st.session_state.goals[index]
 
-# Add goal functionality
 if st.button("Add a joint goal"):
     add_goal()
 
-# Loop through goals and display each one
 for i, goal in enumerate(st.session_state.goals):
-    cols = st.columns([6, 1])
-    with cols[0]:
-        st.write(f"### {goal['goal_name'] if goal['goal_name'] else 'Unnamed Goal'}")
-    with cols[1]:
-        if st.button("➖", key=f"delete_{i}"):
-            delete_goal(i)
-            st.experimental_rerun()
-
+    st.write(f"### Goal {i + 1}")
     goal['goal_name'] = st.text_input(f"Goal name", value=goal['goal_name'], key=f"goal_name_{i}")
     goal['goal_amount'] = st.number_input(f"Goal amount ($)", value=goal['goal_amount'], min_value=0.0, key=f"goal_amount_{i}")
     goal['goal_rate_of_return'] = st.number_input(f"Rate of return for this goal (%)", value=goal['goal_rate_of_return'], min_value=0.0, max_value=100.0, key=f"goal_rate_of_return_{i}")
@@ -89,40 +79,30 @@ for i, goal in enumerate(st.session_state.goals):
         else:
             st.write("Error: Ensure the rate of return and monthly contribution are greater than 0.")
 
-# Create a timeline DataFrame
-def create_timeline_data():
-    data = []
-    current_year = date.today().year
-    for year in range(current_year, retirement_age + 1):
-        data.append({'Year': year, 'Current Age': year - current_year + current_age})
-    
-    for goal in st.session_state.goals:
-        if goal['goal_type'] == "Desired date":
-            if goal['goal_year'] >= current_year:
-                data.append({'Year': goal['goal_year'], 'Goal': f"{goal['goal_name']} (${goal['goal_amount']})"})
-        elif goal['goal_type'] == "Monthly amount":
-            if goal['goal_monthly_contributions_input'] > 0:
-                months_to_goal = math.log(goal['goal_monthly_contributions_input'] / (goal['goal_monthly_contributions_input'] - goal['goal_amount'] * goal['goal_rate_of_return'] / 100 / 12)) / math.log(1 + goal['goal_rate_of_return'] / 100 / 12)
-                goal_year = int(date.today().year + months_to_goal // 12)
-                if goal_year >= current_year:
-                    data.append({'Year': goal_year, 'Goal': f"{goal['goal_name']} (${goal['goal_amount']})"})
-    
-    return pd.DataFrame(data)
+    if st.button(f"Delete Goal", key=f"delete_{i}"):
+        delete_goal(i)
 
+# Function to plot the timeline
 def plot_timeline():
-    timeline_df = create_timeline_data()
-    st.write("### Timeline")
+    today = date.today()
+    years = list(range(current_age, retirement_age + 1))
     
-    # Check if required columns are present
-    required_columns = ['Year', 'Current Age', 'Goal']
-    missing_columns = [col for col in required_columns if col not in timeline_df.columns]
-    if missing_columns:
-        st.write(f"Error: Missing columns {missing_columns} from timeline_df.")
-        return
+    # Create a DataFrame for the timeline
+    timeline_df = pd.DataFrame({'Year': years})
 
-    # Create a Plotly figure
-    fig = px.scatter(timeline_df, x='Year', y='Current Age', text='Goal', title="Life Timeline", labels={"Year": "Year", "Current Age": "Age"})
-    fig.update_traces(textposition='top center')
+    # Add goals to the timeline
+    for goal in st.session_state.goals:
+        if goal['goal_type'] == 'Desired date':
+            goal_year = goal['goal_year']
+            if goal_year >= current_age and goal_year <= retirement_age:
+                timeline_df.loc[timeline_df['Year'] == goal_year, 'Goal'] = f"Goal: {goal['goal_name']}, Amount: ${goal['goal_amount']}"
+    
+    # Plot the timeline
+    fig = px.scatter(timeline_df, x='Year', y=[0]*len(timeline_df), text='Goal', title="Life Timeline")
+    fig.update_layout(showlegend=False)
+    fig.update_traces(marker=dict(size=10, color='red'), textposition='top center')
+
     st.plotly_chart(fig)
 
+# Call the plot function
 plot_timeline()
