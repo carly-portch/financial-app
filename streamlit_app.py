@@ -47,22 +47,35 @@ with st.expander("Add a Goal"):
     if st.button("Add goal to timeline"):
         if goal_name and goal_amount > 0:
             if goal_type == "Monthly Contribution":
-                target_year = int(target_year)  # Convert to integer
+                # Calculate months_to_goal based on target_year
+                current_month = date.today().month
+                current_year = date.today().year
+                months_to_goal = (target_year - current_year) * 12
+
+                # Correct calculation of monthly contribution required to meet the goal
+                rate_of_return_monthly = interest_rate / 100 / 12
+                if rate_of_return_monthly > 0:
+                    calculated_monthly_contribution = goal_amount * rate_of_return_monthly / ((1 + rate_of_return_monthly) ** months_to_goal - 1)
+                else:
+                    calculated_monthly_contribution = goal_amount / months_to_goal
+                
+                # Adjust target_year based on calculated monthly contribution
+                target_year = date.today().year + int(np.ceil(months_to_goal / 12))
+
             elif goal_type == "Target Date":
+                # Calculate the monthly contribution required based on the target date
                 months_to_goal = 12 * (target_year - date.today().year)
                 rate_of_return_monthly = interest_rate / 100 / 12
                 if rate_of_return_monthly > 0:
                     monthly_contribution = goal_amount * rate_of_return_monthly / ((1 + rate_of_return_monthly) ** months_to_goal - 1)
                 else:
                     monthly_contribution = goal_amount / months_to_goal
-            else:
-                monthly_contribution = 0
 
             # Append goal to session state
             st.session_state.goals.append({
                 'goal_name': goal_name,
                 'goal_amount': goal_amount,
-                'monthly_contribution': contribution_amount if contribution_amount else monthly_contribution,
+                'monthly_contribution': contribution_amount if contribution_amount else calculated_monthly_contribution,
                 'target_date': target_year
             })
 
