@@ -5,16 +5,16 @@ import numpy as np
 from datetime import date
 
 st.title("Design Your Dream Life")
-st.write("This tool helps you estimate your retirement net worth and manage goals.")
-st.write("Enter the required information below:")
+st.write("This tool helps you estimate your retirement savings and manage medium and long-term goals.")
+st.write("Please begin by filling in the fields below. Add in any medium or long-term goals you would like to save for such as a house down payment, wedding, etc. You can input your goal based on the date you would like to reach this goal (target date), or by inputing your desired monthly contribution and we will tell you what year this goal will be reached. When your goal is complete, click 'Add to timeline' and the goal will appear in the timeline at the bottom of the tool. If you would like to remove a goal, please delete it via the left side panel.")
 
 # Input fields for retirement calculation
 current_age = st.number_input("Enter your current age", min_value=0)
 retirement_age = st.number_input("Enter your desired retirement age", min_value=current_age + 1)
 monthly_income = st.number_input("Enter your monthly income after tax", min_value=0.0)
 monthly_expenses = st.number_input("Enter your monthly expenses", min_value=0.0)
-rate_of_return = st.number_input("Rate of return (%)", min_value=0.0, max_value=100.0, value=5.0)
-st.write("Note: For stock market investments, 6-7% is the average rate of return; for savings, input the interest rate of your savings account.")
+rate_of_return = st.number_input("Rate of Return or Interest (%)", min_value=0.0, max_value=100.0, value=5.0)
+st.write("Note: The rate of return refers to the growth of your money based on where it's invested. For instance, if you plan to invest your retirement savings in the stock market, the average rate of return is typically around 6-7%. For a high-interest savings account, the interest rate usually ranges from 2-5%. However, if you're aware of the specific interest rate offered by your bank, use that figure.")
 
 # Initialize goal list
 if 'goals' not in st.session_state:
@@ -23,9 +23,9 @@ if 'goals' not in st.session_state:
 # Display goal addition dropdown
 with st.expander("Add a Goal"):
     goal_name = st.text_input("Name of goal")
-    goal_amount = st.number_input("Amount of money for this goal", min_value=0.0)
-    interest_rate = st.number_input("Interest rate (%) for the goal", min_value=0.0, max_value=100.0, value=5.0)
-    goal_type = st.radio("Select how you want to calculate the goal", ["Target Date", "Monthly Contribution"])
+    goal_amount = st.number_input("Goal amount", min_value=0.0)
+    interest_rate = st.number_input("Rate of Return/Interest rate (%)", min_value=0.0, max_value=100.0, value=5.0)
+    goal_type = st.radio("Select how you want to calculate your goal", ["Target Date", "Monthly Contribution"])
 
     if goal_type == "Monthly Contribution":
         contribution_amount = st.number_input("Monthly contribution towards this goal", min_value=0.0)
