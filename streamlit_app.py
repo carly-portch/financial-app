@@ -6,7 +6,7 @@ from datetime import date
 
 st.title("Design Your Dream Life")
 st.write("This tool helps you estimate your retirement savings and manage medium and long-term goals.")
-st.write("Please begin by filling in the fields below. Add in any medium or long-term goals you would like to save for such as a house down payment, wedding, etc. You can input your goal based on the date you would like to reach this goal (target date), or by inputing your desired monthly contribution and we will tell you what year this goal will be reached. When your goal is complete, click 'Add to timeline' and the goal will appear in the timeline at the bottom of the tool. If you would like to remove a goal, please delete it via the left side panel.")
+st.write("To get started, please fill out the fields below. You can add any medium- or long-term goals you want to save for, such as a down payment on a house or a wedding. You can specify your goal either by entering the target date for achieving it or by providing your desired monthly contribution; we’ll calculate the year you can expect to reach that goal. Once you’ve set your goal, click 'Add to timeline,' and it will appear in the timeline at the bottom of the tool. If you wish to remove a goal, you can delete it from the left-side panel.")
 
 # Input fields for retirement calculation
 current_age = st.number_input("Enter your current age", min_value=0)
