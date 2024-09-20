@@ -24,7 +24,7 @@ if 'goals' not in st.session_state:
 with st.expander("Add a Goal"):
     goal_name = st.text_input("Name of goal")
     goal_amount = st.number_input("Goal amount", min_value=0.0)
-    interest_rate = st.number_input("Rate of return or interest rate (%)", min_value=0.0, max_value=100.0, value=5.0)
+    interest_rate = st.number_input("Rate of return or interest (%)", min_value=0.0, max_value=100.0, value=5.0)
     goal_type = st.radio("Select how you want to calculate your goal", ["Target Date", "Monthly Contribution"])
 
     if goal_type == "Monthly Contribution":
